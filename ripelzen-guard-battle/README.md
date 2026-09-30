@@ -6,17 +6,38 @@ their ranks.
 
 ![The Ripelzen Guard Advancing Under Fire](output/ripelzen-guard-battle-preview.png)
 
-No image generator, no stock art and no 3D assets are used. Every guardsman, uniform, bearskin,
-musket, blade of grass, tree, cloud and brush stroke is built and rendered by the JavaScript in
-this folder. The renderer has **zero dependencies** and needs only Node.js 18+.
+No image generator, no stock art and no 3D assets are used. The renderer has **zero
+dependencies** and needs only Node.js 18+.
+
+It works the way a studio painter works from posed lay figures. A 3D scene of posed guardsmen,
+countryside, smoke and light is built first, but it is only the painter's hidden reference. None of
+its rendered pixels reach the picture. `src/painter.mjs` reads it for:
+
+- local colour
+- where the light falls
+- which way each surface turns
+- where one form ends and the next begins
+
+It then paints the canvas stroke by stroke:
+
+1. a toned ground
+2. an umber underdrawing and shadow washes
+3. a broad block-in of the masses
+4. form-following modelling strokes, coarse to fine, that pick up the wet paint beneath
+5. thick lights and dark accents
+6. glazes
+7. finally, the relief of the paint and canvas weave under a raking light
+
+Values are grouped into a few soft steps instead of smooth shading. The principal figures get the
+finest brush and the strongest light, while the rest of the line recedes into smoky air.
 
 ## Rendering it
 
 ```bash
 cd ripelzen-guard-battle
-node render.mjs                      # 3840x2160, 2x2 supersampled (about 4-5 min, single thread)
+node render.mjs                      # 3840x2160 (about 3 min, single thread)
 node render.mjs --w 1920 --h 1080    # about 1 min
-node render.mjs --w 1280 --h 720 --ss 1 --fast   # quick composition preview (about 30 s)
+node render.mjs --w 1280 --h 720 --fast   # quick composition preview (about 25 s)
 ```
 
 The output is written to `output/ripelzen-guard-battle.png` (or `--out <file>`).
@@ -34,7 +55,7 @@ Helper tools:
 
 | Stage | Code | What it does |
 | --- | --- | --- |
-| Rasteriser | `src/core/raster.mjs` | Z-buffered triangle rasteriser with perspective-correct attributes, per-fragment materials, near-plane clipping, and PCF soft shadow maps |
+| Reference | `src/core/raster.mjs` | Z-buffered rasteriser that records what the painter needs to see: local colour, light and cast shadow, surface orientation, object boundaries, haze and smoke |
 | Lighting | `src/core/light.mjs` | Warm raking sun broken into patches by the smoke, cool sky fill, ground bounce, specular, Kajiya-Kay fur highlights, normal perturbation for cloth folds, and aerial perspective |
 | Guardsman | `src/figure/*` | Skeleton with forward kinematics for the trunk and two-bone IK for limbs, plus parametric surfaces for body, face, hands and uniform |
 | Poses | `src/figure/poses.mjs`, `actions.mjs` | Gait cycle, four musket carries with real hand grips, and the dramatic pose library (thrown back, collapsing sideways, dropping to a knee, bearskin knocked loose, falling forward, clutching a wound, recoiling, sagging, lying, rising on a musket, crouching beside a comrade, officers rallying and dressing the line) |
@@ -43,7 +64,7 @@ Helper tools:
 | Countryside | `src/world/*` | Heightfield hills, field patchwork, farm lane, grass blades and wildflowers, oaks and poplars, hedgerows, dry-stone wall, broken fence, an overturned basket and pitchfork, a cart, haystacks, fleeing cattle, and a village with church and orchards |
 | Sky | `src/world/sky.mjs` | Towering cumulus rising out of the gun smoke, a smoke-stained ceiling, a muted blue break with sunbeams |
 | Effects | `src/fx/*`, `src/scene/effects.mjs` | Analytic volumetric smoke integrated per ray and clipped by scene depth (so it threads between the soldiers), dust spurts, flying earth and turf, shell bursts, a ricochet trail and muzzle flashes glimpsed through smoke |
-| Painting | `src/post.mjs`, `src/paint.mjs` | Warm neoclassical grading, a structure-tensor flow field, Hertzmann-style layered brush strokes (coarse to fine, edge-stopping, broken colour, bristle texture), canvas weave and vignette |
+| Painting | `src/painter.mjs`, `src/post.mjs` | Every mark on the canvas: ground, underdrawing, block-in, modelling strokes (bristles, dry-brush tails, wet pickup, broken colour), impasto, glazes, paint relief and canvas weave, then warm varnish toning |
 
 ### The uniform
 

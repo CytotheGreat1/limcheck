@@ -68,6 +68,13 @@ export function shadeLit(F, ar, ag, ab) {
   if (Env.aoFn) ao *= Env.aoFn(F.px, F.py, F.pz);
   const skyw = (0.55 + 0.45 * ny) * ao, grw = (0.45 - 0.45 * ny) * ao;
   const sc = Env.sunCol, kc = Env.skyCol, gc = Env.groundCol;
+  // reference data for the painter: local colour, light, ambient, surface orientation
+  F.ar = ar; F.ag = ag; F.ab = ab;
+  F.lsun = diff / Env.sunI; F.lamb = ao * (0.55 + 0.45 * ny);
+  F.lspec = 0; F.fog = 0;
+  const cr = cam.right, cu = cam.up;
+  F.snx = nx * cr[0] + ny * cr[1] + nz * cr[2];
+  F.sny = nx * cu[0] + ny * cu[1] + nz * cu[2];
   let r = ar * (sc[0] * diff + kc[0] * skyw + gc[0] * grw);
   let g = ag * (sc[1] * diff + kc[1] * skyw + gc[1] * grw);
   let b = ab * (sc[2] * diff + kc[2] * skyw + gc[2] * grw);
@@ -78,6 +85,7 @@ export function shadeLit(F, ar, ag, ab) {
     if (ndh > 0 && ndl > 0) {
       const s = S.spec * Math.pow(ndh, S.shin) * sunV * Env.sunI * (0.3 + 0.7 * Math.min(1, ndl * 3));
       const t = S.specTint;
+      F.lspec += s / Env.sunI;
       r += s * sc[0] * (1 - t + t * ar * 3);
       g += s * sc[1] * (1 - t + t * ag * 3);
       b += s * sc[2] * (1 - t + t * ab * 3);
@@ -93,6 +101,7 @@ export function shadeLit(F, ar, ag, ab) {
     const sn = Math.sqrt(Math.max(0, 1 - th * th));
     const a = S.aniso * Math.pow(sn, S.anisoShin) * sunV * Env.sunI * Math.max(0, Math.min(1, ndl + 0.35));
     const ac = S.anisoCol || sc;
+    F.lspec += a / Env.sunI * 0.5;
     r += a * ac[0]; g += a * ac[1]; b += a * ac[2];
   }
   if (S.sheen > 0) {

@@ -122,6 +122,11 @@ export class Smoke {
           const i = (sy * T.W + sx) * 3;
           const tr = Math.exp(-tau[k]);
           const a = (1 - tr) / tau[k];
+          if (T.g) {
+            const gi = sy * T.W + sx, G = T.g;
+            G.smA[gi] = 1 - tr;
+            G.smC[gi * 3] = acR[k] / tau[k] + emR[k] / (1 - tr + 1e-4); G.smC[gi * 3 + 1] = acG[k] / tau[k] + emG[k] / (1 - tr + 1e-4); G.smC[gi * 3 + 2] = acB[k] / tau[k] + emB[k] / (1 - tr + 1e-4);
+          }
           T.rgb[i] = T.rgb[i] * tr + acR[k] * a + emR[k];
           T.rgb[i + 1] = T.rgb[i + 1] * tr + acG[k] * a + emG[k];
           T.rgb[i + 2] = T.rgb[i + 2] * tr + acB[k] * a + emB[k];

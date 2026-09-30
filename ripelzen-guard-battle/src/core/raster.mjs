@@ -2,12 +2,38 @@
 // interpolation and a per-fragment material callback.
 
 export class Target {
-  constructor(W, H) {
+  constructor(W, H, { gbuf = false } = {}) {
     this.W = W; this.H = H;
     this.rgb = new Float32Array(W * H * 3);
     this.z = new Float32Array(W * H).fill(Infinity);
     this.tag = new Uint8Array(W * H); // coarse material class for post effects
+    // reference buffers for the painter (what a painter would read off a posed model)
+    if (gbuf) {
+      const N = W * H;
+      this.g = {
+        alb: new Float32Array(N * 3), // local colour
+        sun: new Float32Array(N), // direct light incl. cast shadows
+        amb: new Float32Array(N), // sky light / occlusion
+        spec: new Float32Array(N), // highlight strength
+        fog: new Float32Array(N), // aerial perspective amount
+        haze: new Float32Array(N * 3),
+        nx: new Float32Array(N), ny: new Float32Array(N), // screen-space surface orientation
+        oid: new Uint32Array(N), // which object (edges between figures)
+        smA: new Float32Array(N), smC: new Float32Array(N * 3), // smoke veil in front
+      };
+    }
   }
+}
+
+// current object id for G-buffer writes
+export const RS = { oid: 1 };
+export function writeG(T, idx, Fr) {
+  const G = T.g;
+  G.alb[idx * 3] = Fr.ar; G.alb[idx * 3 + 1] = Fr.ag; G.alb[idx * 3 + 2] = Fr.ab;
+  G.sun[idx] = Fr.lsun; G.amb[idx] = Fr.lamb; G.spec[idx] = Fr.lspec; G.fog[idx] = Fr.fog;
+  G.haze[idx * 3] = Fr.hr; G.haze[idx * 3 + 1] = Fr.hg; G.haze[idx * 3 + 2] = Fr.hb;
+  G.nx[idx] = Fr.snx; G.ny[idx] = Fr.sny;
+  G.oid[idx] = RS.oid;
 }
 
 // Shared fragment record handed to materials.
@@ -17,6 +43,7 @@ export const F = {
   nx: 0, ny: 0, nz: 1,
   u: 0, v: 0, ex: 0,
   tx: 1, ty: 0, tz: 0,
+  ar: 0, ag: 0, ab: 0, lsun: 0, lamb: 0, lspec: 0, fog: 0, hr: 0, hg: 0, hb: 0, snx: 0, sny: 0,
   r: 0, g: 0, b: 0,
   discard: false,
   tag: 0,
@@ -158,6 +185,7 @@ function rasterTri(T, a, b, c, mat, cull) {
       ZB[idx] = z;
       RGB[idx * 3] = Fr.r; RGB[idx * 3 + 1] = Fr.g; RGB[idx * 3 + 2] = Fr.b;
       TAG[idx] = Fr.tag;
+      if (T.g) writeG(T, idx, Fr);
     }
   }
 }

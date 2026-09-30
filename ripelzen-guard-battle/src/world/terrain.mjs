@@ -2,7 +2,7 @@
 import { clamp, lerp, smoothstep, hex, norm } from '../core/math.mjs';
 import { fbm2, noise2, ridge2, hash2, NoiseTex } from '../core/rng.mjs';
 import { S, resetS, shadeLit, Env } from '../core/light.mjs';
-import { F } from '../core/raster.mjs';
+import { F, writeG, RS } from '../core/raster.mjs';
 import { lineCoords, EYE } from './layout.mjs';
 
 // ---------------- height ----------------
@@ -223,6 +223,7 @@ export function renderTerrain(T, cam, { tMax = 9000 } = {}) {
           ZB[idx] = tz;
           RGB[idx * 3] = F.r; RGB[idx * 3 + 1] = F.g; RGB[idx * 3 + 2] = F.b;
           TAG[idx] = 1;
+          if (T.g) { RS.oid = 1; writeG(T, idx, F); }
         }
         ymin = yTop;
       }

@@ -316,7 +316,13 @@ export function buildStory({ fast = false } = {}) {
     }
   }
 
-  for (const sol of sols) items.push(soldierItem(sol));
+  // the figures the painter finishes most carefully; the rest of the line is handled more broadly
+  const FOCAL = new Set(['thrown', 'knee', 'forward', 'twist', 'collapse', 'clutch', 'captain', 'crouch', 'riser', 'fallen']);
+  fallen.name = 'fallen';
+  for (const sol of sols) {
+    const focal = FOCAL.has(sol.name) || (sol.file === 0 && sol.rank === 0) || (sol.file === 3 && sol.rank <= 1);
+    items.push(soldierItem(sol, { focal }));
+  }
 
   // ---------------- light: patches of sun through smoke ----------------
   const focus = [fromLine(5.8, 1.0), fromLine(6.3, 3.1)];

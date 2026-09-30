@@ -128,6 +128,7 @@ export function renderSky(T, cam) {
       skyColor(d, out);
       T.rgb[i * 3] = out[0]; T.rgb[i * 3 + 1] = out[1]; T.rgb[i * 3 + 2] = out[2];
       T.tag[i] = 0;
+      if (T.g) { const G = T.g; G.oid[i] = 0; G.alb[i * 3] = out[0]; G.alb[i * 3 + 1] = out[1]; G.alb[i * 3 + 2] = out[2]; G.sun[i] = 1; G.amb[i] = 0; G.fog[i] = 0; }
     }
   }
 }
@@ -143,6 +144,7 @@ export function makeAtmo(cam) {
     const sigma = 0.00042 + 0.0011 * Math.exp(-ym / 45);
     const tr = Math.exp(-dist * sigma);
     const k = 1.35 * (1 - tr);
+    F.fog = 1 - tr; F.hr = HZ[0] * 1.35; F.hg = HZ[1] * 1.35; F.hb = HZ[2] * 1.35;
     F.r = r * tr + HZ[0] * k;
     F.g = g * tr + HZ[1] * k;
     F.b = b * tr + HZ[2] * k;
