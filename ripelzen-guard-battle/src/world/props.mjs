@@ -46,44 +46,45 @@ function barkMat() {
 // A broad-canopied tree (oak/elm). base on ground, H height.
 export function tree(rng, base, H, { spread = 1, lod = 1, kind = 'oak' } = {}) {
   const out = [];
-  const trunkH = H * (kind === 'poplar' ? 0.25 : 0.38);
-  const lean = [rng.gclip(0, 0.08), 1, rng.gclip(0, 0.08)];
+  const poplar = kind === 'poplar';
+  const trunkH = H * (poplar ? 0.22 : 0.3);
+  const lean = [rng.gclip(0, 0.07), 1, rng.gclip(0, 0.07)];
   const top = madd(base, norm(lean), trunkH);
-  const tr = limb(base, top, [1, 0, 0], (t) => { const r = H * 0.035 * (1.3 - 0.5 * t); return [r, r]; }, { nu: Math.max(6, Math.round(12 * lod)), nv: 4, capB: H * 0.03 });
+  const tr = limb(base, top, [1, 0, 0], (t) => { const r = H * (poplar ? 0.022 : 0.03) * (1.25 - 0.35 * t) * (t < 0.08 ? 1.25 - t * 3 : 1); return [r, r]; }, {
+    nu: Math.max(6, Math.round(14 * lod)), nv: 6, capB: H * 0.02,
+    disp: (t, th) => 0.08 * noise3(t * 5, Math.cos(th) * 2, Math.sin(th) * 2),
+  });
   tr.material = barkMat();
   out.push(tr);
-  // main limbs
-  const nb = kind === 'poplar' ? 2 : 5;
-  const tips = [];
+  // crown: clumps on a dome, big limbs reaching into them
+  const crownC = madd(top, [0, 1, 0], H * (poplar ? 0.36 : 0.2));
+  const RH = H * (poplar ? 0.12 : 0.36) * spread, RV = H * (poplar ? 0.42 : 0.3);
+  const nc = poplar ? 16 : 30;
+  const clumps = [];
+  for (let i = 0; i < nc; i++) {
+    const ang = rng.range(0, Math.PI * 2);
+    const dy = poplar ? rng.range(-0.9, 0.95) : rng.range(-0.35, 1);
+    const hr = Math.sqrt(Math.max(0, 1 - dy * dy));
+    const k = rng.range(0.55, 1.0);
+    const c = add(crownC, [Math.cos(ang) * hr * RH * k, dy * RV * k, Math.sin(ang) * hr * RH * k]);
+    const r = H * (poplar ? rng.range(0.07, 0.1) : rng.range(0.1, 0.16)) * spread;
+    clumps.push([c, r]);
+  }
+  // limbs: from the trunk top toward a few outer clumps
+  const nb = poplar ? 3 : 6;
   for (let i = 0; i < nb; i++) {
-    const ang = (i / nb) * Math.PI * 2 + rng.range(0, 1);
-    const up = kind === 'poplar' ? 3 : rng.range(0.7, 1.4);
-    const d = norm([Math.cos(ang), up, Math.sin(ang)]);
-    const L = H * rng.range(0.25, 0.42) * (kind === 'poplar' ? 0.6 : 1) * spread;
-    const e = madd(top, d, L);
-    const br = limb(madd(top, [0, -H * 0.03, 0], 1), e, [1, 0, 0], (t) => { const r = H * 0.022 * (1 - 0.7 * t); return [r, r]; }, { nu: 6, nv: 3 });
+    const [c] = clumps[i];
+    const e = vlerp(top, c, 0.85);
+    const br = limb(madd(top, [0, -H * 0.04, 0], 1), e, [1, 0, 0], (t) => { const r = H * 0.018 * (1 - 0.75 * t); return [r, r]; }, { nu: 6, nv: 4, bend: { dir: [0, 1, 0], amt: H * 0.03 } });
     br.material = barkMat();
     out.push(br);
-    tips.push(e);
-  }
-  // canopy: displaced clumps around branch tips and crown
-  const crownC = madd(top, [0, 1, 0], H * (kind === 'poplar' ? 0.4 : 0.28));
-  const clumps = [];
-  const nc = kind === 'poplar' ? 12 : 22;
-  for (let i = 0; i < nc; i++) {
-    let c;
-    if (kind === 'poplar') c = madd(top, [rng.gclip(0, 0.05) * H, H * (0.1 + i / nc * 0.62), rng.gclip(0, 0.05) * H], 1);
-    else c = vlerp(crownC, rng.pick(tips), rng.range(0.3, 1.1));
-    c = add(c, [rng.gclip(0, 0.08) * H, rng.gclip(0, 0.06) * H, rng.gclip(0, 0.08) * H]);
-    const r = H * (kind === 'poplar' ? rng.range(0.08, 0.12) : rng.range(0.11, 0.19)) * spread;
-    clumps.push([c, r]);
   }
   const tone = rng.pick(LEAF);
   const seed = rng.range(0, 100);
   for (const [c, r] of clumps) {
     const fr = Frame.fromYaw(c, rng.range(0, 6.28));
     const m = ellipsoid(fr, r * 1.1, r * 0.85, r, {
-      nu: Math.max(8, Math.round(34 * lod)), nv: Math.max(6, Math.round(22 * lod)),
+      nu: Math.max(8, Math.round(30 * lod)), nv: Math.max(6, Math.round(20 * lod)),
       deform: (p) => {
         const n = noise3(p[0] / r * 1.7 + seed, p[1] / r * 1.7, p[2] / r * 1.7) * 0.4 + noise3(p[0] / r * 5 + seed, p[1] / r * 5, p[2] / r * 5) * 0.18 + noise3(p[0] / r * 13, p[1] / r * 13, p[2] / r * 13 + seed) * 0.07;
         return [p[0] * (1 + n), p[1] * (1 + n) - (p[1] < 0 ? p[1] * 0.25 : 0), p[2] * (1 + n)];

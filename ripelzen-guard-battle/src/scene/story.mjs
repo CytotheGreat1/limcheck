@@ -1,7 +1,7 @@
 // The scene's story: which guardsmen stand where, who is struck and how, who helps, where the officers are.
 // Layout (see world/layout.mjs): the viewer stands ~1.8 m behind the rear rank at the flank of the line.
 // s = metres along the line from the flank, a = metres ahead of the rear rank (toward the hidden enemy).
-import { Frame, add, sub, mul, madd, norm, lerp, clamp, smoothstep, rotAxis, cross } from '../core/math.mjs';
+import { Frame, add, sub, mul, madd, norm, lerp, clamp, smoothstep, rotAxis, cross, vlerp } from '../core/math.mjs';
 import { Rng, fbm2, noise2 } from '../core/rng.mjs';
 import { buildSoldier } from '../figure/soldier.mjs';
 import { buildMusket, musketFrame } from '../figure/equipment.mjs';
@@ -15,8 +15,11 @@ import {
 } from '../figure/actions.mjs';
 import { L, A, fromLine } from '../world/layout.mjs';
 import { height } from '../world/terrain.mjs';
-import { superBox } from '../figure/geom.mjs';
+import { superBox, limb } from '../figure/geom.mjs';
+import { gridSurface } from '../core/mesh.mjs';
 import { leatherMat, metalMat, C as COL } from '../figure/materials.mjs';
+import { S as LS, resetS, shadeLit } from '../core/light.mjs';
+const flatMat = (c) => ({ shade(F) { resetS(); LS.wrap = 0.3; LS.twoSided = true; F.tag = 9; shadeLit(F, c[0], c[1], c[2]); } });
 
 const S0 = 5.2; // first file (flank) position along the line
 export const fileS = (f, r = 0) => S0 + f * FILE_SP + r * 0.05;
@@ -123,9 +126,9 @@ export function buildStory({ fast = false } = {}) {
   mods.set(key(2, 2), { mood: 'fear', turn: -0.5, nod: 0.3, carry: 'port', crouch: 0.05, lean: 0.14 });
   mods.set(key(3, 2), { mood: 'tense', turn: -0.7, carry: 'port' });
   // files 4-6 close toward the gap, stepping around the fallen, muskets raised
-  mods.set(key(4, 2), { mood: 'grim', carry: 'port', carryOpt: { dy: 0.1, tiltY: 0.2 }, ds: -0.25, footX: [0.08, 0.12], turn: -0.3 });
-  mods.set(key(4, 1), { mood: 'tense', carry: 'port', carryOpt: { dy: 0.14, tiltY: 0.3 }, ds: -0.2, turn: -0.55, lean: 0.12 });
-  mods.set(key(4, 0), { mood: 'grim', ds: -0.15, turn: -0.45, carry: 'port', carryOpt: { dy: 0.12, tiltY: 0.25 } });
+  mods.set(key(4, 2), { mood: 'grim', carry: 'port', carryOpt: { dy: 0.05, tiltY: 0.08, lpos: -0.1 }, ds: -0.25, footX: [0.08, 0.12], turn: -0.3 });
+  mods.set(key(4, 1), { mood: 'tense', carry: 'port', carryOpt: { dy: 0.07, tiltY: 0.12, lpos: -0.1 }, ds: -0.2, turn: -0.55, lean: 0.12 });
+  mods.set(key(4, 0), { mood: 'grim', ds: -0.15, turn: -0.45, carry: 'port', carryOpt: { dy: 0.06, tiltY: 0.1, lpos: -0.1 } });
   mods.set(key(5, 2), { mood: 'angry', ds: -0.2, carry: 'port', turn: -0.25 });
   mods.set(key(5, 1), { mood: 'shout', turn: -0.6, carry: 'port' });
   mods.set(key(5, 0), { mood: 'set', turn: -0.3 });
@@ -166,10 +169,14 @@ export function buildStory({ fast = false } = {}) {
     if (!who) continue;
     const i = m.reach.hand;
     // target: the other man's shoulder/upper arm (approximate from his pelvis)
-    const tp = madd(who.pose.pelvis.o, who.pose.pelvis.y, 0.42 * who.body.s);
-    const from = sol.pose.pelvis.o;
-    const d = norm(sub(tp, from));
-    const tgt = madd(tp, d, -0.09);
+    // target: the other man's upper arm, kept at a natural reach from the helper's own chest
+    let tp = madd(who.pose.pelvis.o, who.pose.pelvis.y, 0.3 * who.body.s);
+    const chestP = madd(sol.pose.pelvis.o, [0, 1, 0], 0.35);
+    let d = sub(tp, chestP);
+    const dl = Math.hypot(d[0], d[1], d[2]);
+    d = norm(d);
+    const reachL = Math.min(Math.max(dl, 0.42), 0.55);
+    const tgt = madd(chestP, d, reachL);
     sol.pose.hand[i] = { fr: handFrame(tgt, norm(add(d, [0, -0.3, 0])), [0, 1, 0]), curl: [0.5, 0.7, 0.4], thumb: 0.6, spread: 0.1 };
     if (i === 0 && sol.carry === 'shoulder') sol.pose.musket = null;
   }
@@ -220,7 +227,7 @@ export function buildStory({ fast = false } = {}) {
     const bfr = Frame.fromUpFwd(bpos, norm(add(L, [0, 0.35, 0])), [0, 1, 0]);
     items.push({ kind: 'prop', pos: bpos, radius: 0.5, height: 0.5, build: (lod) => buildBearskin(bfr, 1, lod, { wind: [0, -0.05, 0] }) });
   }
-  const riser = special(603, 9.6, -2.5, (G, b, g) => riseOnMusket(G.yaw(0.5), b, g), { mood: 'pain' });
+  const riser = special(603, 11.5, -1.55, (G, b, g) => riseOnMusket(G.yaw(0.5), b, g), { mood: 'pain' });
   riser.name = 'riser';
   sols.push(riser);
   const bodies = [[8.2, -1.25, 1.2, true], [15.5, -1.9, 2.9, false], [25, -1.5, 0.4, false], [33, -2.3, -2.2, true], [44, -1.7, 1.6, false]];
@@ -237,6 +244,63 @@ export function buildStory({ fast = false } = {}) {
     const dir = norm(rotAxis(L, [0, 1, 0], yaw));
     const fr = musketFrame([x, y, z], dir, rotAxis([0, 1, 0], dir, 1.4));
     items.push({ kind: 'prop', pos: [x, y, z], radius: 0.9, height: 0.2, build: (lod) => buildMusket(fr, lod, { sling: false }) });
+  }
+
+  // ---------------- stretcher bearers carrying a wounded man to the rear, half lost in smoke ----------------
+  {
+    const s0 = 50, a0 = -4.2;
+    const back = mul(A, -1);
+    const yawBack = Math.PI; // relative to the line's facing
+    const bearers = [];
+    for (let k = 0; k < 2; k++) {
+      const rng = new Rng(620 + k);
+      const sol = marcher(rng, s0, a0 - k * 2.3, { carry: 'shoulder', mood: 'tired', yaw: yawBack + 0.08, lean: 0.12, armSwing: 0 });
+      sol.pose.musket = null;
+      bearers.push(sol);
+    }
+    // stretcher poles between the bearers' hands at hip height
+    const [b0, b1] = bearers;
+    const c0 = b0.pose.pelvis, c1 = b1.pose.pelvis;
+    const poleY = (c0.o[1] + c1.o[1]) / 2 - 0.2;
+    const side = norm([L[0], 0, L[2]]);
+    const ends = [];
+    for (const sg of [-1, 1]) {
+      const p0 = madd([c0.o[0], poleY, c0.o[2]], side, sg * 0.28);
+      const p1 = madd([c1.o[0], poleY, c1.o[2]], side, sg * 0.28);
+      ends.push([madd(p0, back, 0.35), madd(p1, back, -0.35)]);
+    }
+    for (const [bi, sol] of bearers.entries()) {
+      for (let i = 0; i < 2; i++) {
+        const sg = i === 0 ? -1 : 1;
+        const e = ends[i === 0 ? 0 : 1][bi === 0 ? 0 : 1];
+        const gp = madd(e, back, bi === 0 ? -0.15 : 0.15);
+        sol.pose.hand[i] = { fr: handFrame(gp, [0, -1, 0], mul(side, sg)), curl: [1, 1.2, 0.7], thumb: 0.8 };
+      }
+      sols.push(sol);
+    }
+    items.push({
+      kind: 'prop', pos: vlerp(c0.o, c1.o, 0.5), radius: 2, height: 1, build: () => {
+        const out = [];
+        for (const [a, b] of ends) {
+          const pole = limb(a, b, [0, 1, 0], () => [0.02, 0.02], { nu: 6, nv: 2 });
+          pole.material = flatMat([0.2, 0.15, 0.1]);
+          out.push(pole);
+        }
+        const cv = gridSurface(2, 6, (u, v) => {
+          const p = vlerp(vlerp(ends[0][0], ends[0][1], 0.15 + v * 0.7), vlerp(ends[1][0], ends[1][1], 0.15 + v * 0.7), u);
+          return [p[0], p[1] - 0.06 * Math.sin(Math.PI * u), p[2]];
+        });
+        cv.material = flatMat([0.45, 0.42, 0.36]);
+        out.push(cv);
+        return out;
+      },
+    });
+    // the wounded man on the stretcher
+    const mid = vlerp(c0.o, c1.o, 0.5);
+    const [ms, ma] = [s0, a0 - 1.15];
+    const wounded = special(630, ms, ma, (G, bd) => lying(G.yaw(-Math.PI / 2 + 0.05), bd, () => poleY - 0.1, { supine: true, curl: 0.15, armsOut: 0.2 }), { mood: 'pain' });
+    wounded.pose.bearskin = null;
+    sols.push(wounded);
   }
 
   // ---------------- the second battalion, far behind in the haze ----------------

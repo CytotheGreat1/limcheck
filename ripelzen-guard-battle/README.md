@@ -14,16 +14,21 @@ this folder. The renderer has **zero dependencies** and needs only Node.js 18+.
 
 ```bash
 cd ripelzen-guard-battle
-node render.mjs                      # 3840x2160, 2x2 supersampled (~15 min on 4 cores)
-node render.mjs --w 1920 --h 1080    # faster
-node render.mjs --w 1280 --h 720 --ss 1 --fast   # quick composition preview (~40 s)
+node render.mjs                      # 3840x2160, 2x2 supersampled (about 4-5 min, single thread)
+node render.mjs --w 1920 --h 1080    # about 1 min
+node render.mjs --w 1280 --h 720 --ss 1 --fast   # quick composition preview (about 30 s)
 ```
 
 The output is written to `output/ripelzen-guard-battle.png` (or `--out <file>`).
 
-`tools/figure-sheet.mjs` renders single guardsmen on a neutral ground (standing like the reference
-portrait, marching with each musket carry, or face close-ups) for checking the model.
-`tools/crop.mjs` crops or enlarges a region of a rendered PNG.
+The render is deterministic: every random choice comes from seeded generators, so the same code
+always paints the same picture.
+
+Helper tools:
+
+- `tools/figure-sheet.mjs` renders single guardsmen on a neutral ground for checking the model: standing like the reference portrait (`stand`), marching with each musket carry (`march`), or face close-ups (`face`, `face34`)
+- `tools/crop.mjs` crops or enlarges a region of a rendered PNG
+- `tools/preview.mjs` makes the downscaled preview
 
 ## How it works
 
@@ -35,7 +40,7 @@ portrait, marching with each musket carry, or face close-ups) for checking the m
 | Poses | `src/figure/poses.mjs`, `actions.mjs` | Gait cycle, four musket carries with real hand grips, and the dramatic pose library (thrown back, collapsing sideways, dropping to a knee, bearskin knocked loose, falling forward, clutching a wound, recoiling, sagging, lying, rising on a musket, crouching beside a comrade, officers rallying and dressing the line) |
 | Story | `src/scene/story.mjs` | Who stands where, who is struck and how, who reaches for whom |
 | Formation | `src/scene/formation.mjs` | Three ranks and hundreds of files, each man with his own height, build, face, age, gait phase, lean, carry, head turn and expression |
-| Countryside | `src/world/*` | Heightfield hills, field patchwork, farm lane, grass blades, oaks and poplars, hedgerows, dry-stone wall, broken fence, cart, haystacks, fleeing cattle, and a village with church and orchards |
+| Countryside | `src/world/*` | Heightfield hills, field patchwork, farm lane, grass blades and wildflowers, oaks and poplars, hedgerows, dry-stone wall, broken fence, an overturned basket and pitchfork, a cart, haystacks, fleeing cattle, and a village with church and orchards |
 | Sky | `src/world/sky.mjs` | Towering cumulus rising out of the gun smoke, a smoke-stained ceiling, a muted blue break with sunbeams |
 | Effects | `src/fx/*`, `src/scene/effects.mjs` | Analytic volumetric smoke integrated per ray and clipped by scene depth (so it threads between the soldiers), dust spurts, flying earth and turf, shell bursts, a ricochet trail and muzzle flashes glimpsed through smoke |
 | Painting | `src/post.mjs`, `src/paint.mjs` | Warm neoclassical grading, a structure-tensor flow field, Hertzmann-style layered brush strokes (coarse to fine, edge-stopping, broken colour, bristle texture), canvas weave and vignette |
@@ -72,4 +77,5 @@ Turf and dust erupt, a plume is torn free and a cartridge box is flying loose. A
 the line, musket balls claim individual men, and survivors close the gaps, duck, glance at the
 fallen and reach for them. The captain turns back to rally the files with his sword raised toward
 the guns, and a lieutenant and sergeant dress the line. Behind the line, a guardsman crouches over
-a fallen comrade, and a wounded man pushes himself up on his musket.
+a fallen comrade, a wounded man pushes himself up on his musket, and stretcher bearers carry a man
+to the rear through the smoke.
