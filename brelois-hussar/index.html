@@ -1,0 +1,1549 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brelois Hussar Tailor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Programmatic Roblox classic Shirt and Pants generator for a Napoleonic-era hussar of the Kingdom of Brelois.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IBM+Plex+Mono:wght@400;500&family=Work+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a tailor's bench. Settings rail on the left; the two cut pattern sheets
+   and the fitting dummy on the right. Single column on phones. */
+:root {
+  --bg: #e8ebf0;
+  --surface: #f6f7f9;
+  --surface-2: #dfe3ea;
+  --ink: #161d33;
+  --muted: #566078;
+  --line: #c4cbd8;
+  --accent: #8b1d28;
+  --accent-ink: #ffffff;
+  --silver: #8e97a8;
+  --check-a: #d9dee6;
+  --check-b: #eef1f5;
+  --stage-top: #dfe4ec;
+  --stage-bottom: #c3cad6;
+  --focus: #2f5bd3;
+  --font-display: "IM Fell English SC", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-ui: "Work Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d111c; --surface: #151a28; --surface-2: #1d2436; --ink: #e3e6ee; --muted: #9aa3b8;
+    --line: #2a3349; --accent: #d0505b; --accent-ink: #160609; --silver: #7d879b;
+    --check-a: #1a2032; --check-b: #222a3e; --stage-top: #1b2234; --stage-bottom: #0e1220; --focus: #8fb0ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d111c; --surface: #151a28; --surface-2: #1d2436; --ink: #e3e6ee; --muted: #9aa3b8;
+  --line: #2a3349; --accent: #d0505b; --accent-ink: #160609; --silver: #7d879b;
+  --check-a: #1a2032; --check-b: #222a3e; --stage-top: #1b2234; --stage-bottom: #0e1220; --focus: #8fb0ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-ui); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 40px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.masthead { padding-block: 28px 20px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.masthead h1 { font-family: var(--font-display); font-weight: 400; font-size: clamp(30px, 5vw, 46px); line-height: 1.05; }
+.lede { margin: 0; max-width: 68ch; color: var(--muted); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.layout > .panel { order: 2; }
+@media (min-width: 980px) { .layout { grid-template-columns: 300px minmax(0, 1fr); } .layout > .panel { order: 0; } }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 18px; }
+@media (min-width: 980px) { .panel { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow: auto; } }
+.panel h2 { font-family: var(--font-display); font-weight: 400; font-size: 19px; display: flex; justify-content: space-between; align-items: baseline; }
+.panel h2 small { font-family: var(--font-ui); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.group { display: grid; gap: 8px; }
+.field { display: grid; gap: 4px; }
+.field > span, .check > span { font-size: 13px; }
+select, input[type="number"] {
+  font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: 6px 8px; width: 100%;
+}
+.swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.swatch { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; padding: 4px; border-radius: 6px; cursor: pointer; }
+.swatch:hover { background: var(--surface-2); }
+.swatch input[type="color"] { width: 28px; height: 28px; padding: 0; border: 1px solid var(--line); border-radius: 50%; background: none; cursor: pointer; overflow: hidden; }
+.swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.swatch input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 50%; }
+.swatch input[type="color"]::-moz-color-swatch { border: 0; border-radius: 50%; }
+.swatch .lbl { display: grid; line-height: 1.2; min-width: 0; }
+.swatch .lbl b { font-weight: 500; font-size: 12.5px; }
+.swatch .lbl code { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+.check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.range-head { display: flex; justify-content: space-between; font-size: 13px; }
+.range-head output { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+button {
+  font: inherit; font-weight: 500; cursor: pointer; border-radius: 6px; padding: 8px 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+}
+button:hover { background: var(--surface-2); }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.primary:hover { filter: brightness(1.08); background: var(--accent); }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.sheets { display: grid; gap: 20px; min-width: 0; }
+.sheet-pair { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+@media (min-width: 720px) { .sheet-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sheet { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.sheet-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sheet-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.sheet-head code { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); overflow-wrap: anywhere; }
+.canvas-wrap {
+  position: relative; border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  aspect-ratio: 585 / 559; max-width: 100%;
+  background-color: var(--check-b);
+  background-image: conic-gradient(var(--check-a) 25%, transparent 0 50%, var(--check-a) 0 75%, transparent 0);
+  background-size: 16px 16px;
+}
+.canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.canvas-wrap canvas.guide { pointer-events: none; }
+.sheet-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.sheet-actions .note { font-size: 12px; color: var(--muted); }
+
+.fitting { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.fitting-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.fitting-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.fitting-head p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.stage {
+  position: relative; height: clamp(360px, 62vh, 560px); border-radius: 8px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 30%, var(--stage-top), var(--stage-bottom));
+  perspective: 1400px; perspective-origin: 50% 40%; touch-action: none; cursor: grab; user-select: none;
+}
+.stage:active { cursor: grabbing; }
+.stage .floor { position: absolute; left: 50%; bottom: 8%; width: 46%; height: 6%; transform: translateX(-50%); border-radius: 50%; background: rgba(0,0,0,.18); filter: blur(6px); }
+.rig { position: absolute; left: 50%; top: 52%; transform-style: preserve-3d; }
+.box { position: absolute; left: 0; top: 0; transform-style: preserve-3d; }
+.face { position: absolute; backface-visibility: hidden; -webkit-backface-visibility: hidden; background-repeat: no-repeat; }
+.views { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.views .sep { flex: 1; }
+
+.status { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin: 0; }
+.uvmap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; min-width: 0; }
+.uvmap h3 { font-family: var(--font-display); font-weight: 400; font-size: 20px; }
+.uvmap p { margin: 0; color: var(--muted); max-width: 70ch; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; font-size: 12.5px; width: 100%; }
+th, td { text-align: left; padding: 5px 10px 5px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 13px; z-index: 20; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="wrap masthead">
+  <p class="eyebrow">Kingdom of Brelois · World of Austeria · light cavalry, c. 1805–1815</p>
+  <h1>Brelois Hussar Tailor</h1>
+  <p class="lede">Cuts a Roblox classic Shirt and Pants for a Brelois hussar trooper. Every face is painted by code onto the official 585 × 559 template: dolman frogging, pointed cuffs, barrel sash, pelisse, Hungarian-knotted breeches and hussar boots.</p>
+</header>
+
+<main class="wrap layout">
+  <aside class="panel" aria-label="Uniform settings">
+    <div class="group">
+      <h2>Regiment <small>preset</small></h2>
+      <label class="field" for="preset"><span>Colour scheme</span>
+        <select id="preset"></select>
+      </label>
+    </div>
+    <div class="group">
+      <h2>Dolman <small>shirt</small></h2>
+      <div class="swatches" data-keys="dolman facing lace buttons"></div>
+    </div>
+    <div class="group">
+      <h2>Equipment</h2>
+      <div class="swatches" data-keys="leather sashCord sashBarrel"></div>
+    </div>
+    <div class="group">
+      <h2>Pelisse</h2>
+      <div class="swatches" data-keys="pelisse fur"></div>
+    </div>
+    <div class="group">
+      <h2>Breeches <small>pants</small></h2>
+      <div class="swatches" data-keys="breeches trouserLace trouserStripe boots linen"></div>
+    </div>
+    <div class="group">
+      <h2>Cut</h2>
+      <label class="check" for="opt-pelisse"><input type="checkbox" id="opt-pelisse"><span>Pelisse slung on left shoulder</span></label>
+      <label class="check" for="opt-crossbelt"><input type="checkbox" id="opt-crossbelt"><span>Pouch belt and cartridge pouch</span></label>
+      <label class="check" for="opt-sash"><input type="checkbox" id="opt-sash"><span>Barrel sash</span></label>
+      <label class="check" for="opt-sabretache"><input type="checkbox" id="opt-sabretache"><span>Sabretache on left leg</span></label>
+      <label class="field" for="opt-cuff"><span>Cuff point</span>
+        <select id="opt-cuff">
+          <option value="front">Front of sleeve</option>
+          <option value="outer">Outer side (strictly historical)</option>
+        </select>
+      </label>
+      <label class="field" for="opt-hands"><span>Hands</span>
+        <select id="opt-hands">
+          <option value="bare">Bare (avatar skin shows)</option>
+          <option value="gloves">Gauntlet gloves</option>
+        </select>
+      </label>
+      <div class="field">
+        <div class="range-head"><label for="opt-rows">Chest braid rows</label><output id="opt-rows-out" for="opt-rows"></output></div>
+        <input type="range" id="opt-rows" min="10" max="18" step="1">
+      </div>
+      <label class="field" for="opt-seed"><span>Cloth grain seed</span>
+        <input type="number" id="opt-seed" min="1" max="999999" step="1">
+      </label>
+    </div>
+    <div class="group">
+      <h2>Settings</h2>
+      <div class="row2">
+        <button type="button" id="copyCfg">Copy as JSON</button>
+        <button type="button" id="resetCfg">Reset preset</button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sheets">
+    <div class="sheet-pair">
+      <figure class="sheet">
+        <div class="sheet-head"><h3>Shirt · dolman</h3><code>Brelois_Hussar_Shirt.png</code></div>
+        <div class="canvas-wrap"><canvas id="shirtCanvas" width="585" height="559" aria-label="Shirt template preview"></canvas><canvas class="guide" id="shirtGuide" width="585" height="559" hidden></canvas></div>
+        <div class="sheet-actions"><button type="button" class="primary" id="dlShirt">Download Shirt PNG</button><span class="note">585 × 559 · PNG with alpha</span></div>
+      </figure>
+      <figure class="sheet">
+        <div class="sheet-head"><h3>Pants · breeches</h3><code>Brelois_Hussar_Pants.png</code></div>
+        <div class="canvas-wrap"><canvas id="pantsCanvas" width="585" height="559" aria-label="Pants template preview"></canvas><canvas class="guide" id="pantsGuide" width="585" height="559" hidden></canvas></div>
+        <div class="sheet-actions"><button type="button" class="primary" id="dlPants">Download Pants PNG</button><span class="note">585 × 559 · PNG with alpha</span></div>
+      </figure>
+    </div>
+    <div class="sheet-actions">
+      <label class="check" for="showGuide"><input type="checkbox" id="showGuide"><span>Show template face outlines (preview only, never exported)</span></label>
+    </div>
+    <p class="status" id="status">Rendering…</p>
+
+    <section class="fitting" aria-label="R6 fitting preview">
+      <div class="fitting-head">
+        <h3>Fitting room · R6</h3>
+        <p>Drag to turn the dummy. Faces are cut from the exported PNGs with the same UV map Roblox uses.</p>
+      </div>
+      <div class="stage" id="stage"><div class="floor"></div><div class="rig" id="rig"></div></div>
+      <div class="views">
+        <button type="button" data-yaw="-28">Front</button>
+        <button type="button" data-yaw="-62">Left side</button>
+        <button type="button" data-yaw="152">Back</button>
+        <button type="button" data-yaw="62">Right side</button>
+        <span class="sep"></span>
+        <label class="check" for="fitShirt"><input type="checkbox" id="fitShirt" checked><span>Shirt</span></label>
+        <label class="check" for="fitPants"><input type="checkbox" id="fitPants" checked><span>Pants</span></label>
+        <label class="check" for="fitShako"><input type="checkbox" id="fitShako" checked><span>Shako</span></label>
+        <label class="check" for="fitSpin"><input type="checkbox" id="fitSpin"><span>Turn</span></label>
+      </div>
+    </section>
+
+    <section class="uvmap" aria-label="Template map">
+      <h3>Template map</h3>
+      <p>Pixel rectangles of the official Roblox clothing template that this generator paints. Pants use the same rectangles, with the right leg in the right-arm slots and the left leg in the left-arm slots. Each face bleeds one pixel into the gutter so texture filtering never shows a seam.</p>
+      <div class="table-scroll"><table id="uvTable"><thead><tr><th>Part</th><th>Face</th><th>x</th><th>y</th><th>w × h</th><th>Neighbour on the left edge</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   1. EDITABLE CONFIGURATION
+   ---------------------------------------------------------------------
+   Colours are provisional Brelois proposals, not Austerian canon.
+   Edit CONFIG (or add a PRESET) and reload; every face re-renders.
+   ===================================================================== */
+const PRESETS = {
+  brelois: {
+    name: 'Brelois Hussars (proposed)',
+    colors: {
+      dolman: '#1a2340',        // deep midnight navy
+      facing: '#8a1c27',        // rich crimson collar and cuffs
+      lace: '#c9ced3',          // antique silver braid
+      buttons: '#e1e4e7',       // polished silver
+      leather: '#16161a',       // black belts and pouch
+      sashCord: '#8a1c27',
+      sashBarrel: '#c9ced3',
+      pelisse: '#1a2340',
+      fur: '#e7e1d3',           // ivory lambskin
+      breeches: '#1b2441',
+      trouserLace: '#c9ced3',
+      trouserStripe: '#8a1c27',
+      boots: '#0e0e11',
+      linen: '#e8e3d8',         // shirt under the dolman (seen only without a shirt)
+    },
+  },
+  guard: {
+    name: 'Brelois Royal Guard (alternative)',
+    colors: {
+      dolman: '#7a1a24', facing: '#1a2340', lace: '#c7a457', buttons: '#d9b866',
+      leather: '#16161a', sashCord: '#1a2340', sashBarrel: '#c7a457',
+      pelisse: '#1a2340', fur: '#1c1a19', breeches: '#1a2340', trouserLace: '#c7a457',
+      trouserStripe: '#7a1a24', boots: '#0e0e11', linen: '#e8e3d8',
+    },
+  },
+  painting: {
+    name: 'Reference painting (teal and ivory)',
+    colors: {
+      dolman: '#3e6c6b', facing: '#e2d8bf', lace: '#d6cfb8', buttons: '#d8bd72',
+      leather: '#d8cdb1', sashCord: '#3e6c6b', sashBarrel: '#d6cfb8',
+      pelisse: '#ddd1b3', fur: '#f1eee7', breeches: '#e6dcc4', trouserLace: '#cdbf9b',
+      trouserStripe: '#3e6c6b', boots: '#0e0e11', linen: '#ece7dc',
+    },
+  },
+};
+
+const DEFAULT_OPTIONS = {
+  pelisse: true,      // fur-trimmed pelisse slung over the left shoulder
+  crossbelt: true,    // pouch belt over the left shoulder, cartridge pouch on the back
+  sash: true,         // barrel sash at the waist
+  sabretache: true,   // sabretache hanging on the left leg
+  cuffPoint: 'front', // 'front' | 'outer'
+  hands: 'bare',      // 'bare' leaves the hand transparent, 'gloves' paints gauntlets
+  gloveColor: '#ece6d6',
+  frogRows: 14,       // rows of chest braid on the dolman
+  seed: 1809,         // cloth grain; same seed gives byte-identical PNGs
+};
+
+const CONFIG = {
+  preset: 'brelois',
+  colors: { ...PRESETS.brelois.colors },
+  options: { ...DEFAULT_OPTIONS },
+};
+
+const COLOR_LABELS = {
+  dolman: 'Dolman', facing: 'Facings', lace: 'Braid', buttons: 'Buttons',
+  leather: 'Leather', sashCord: 'Sash cords', sashBarrel: 'Sash barrels',
+  pelisse: 'Pelisse', fur: 'Fur trim', breeches: 'Breeches', trouserLace: 'Thigh knots',
+  trouserStripe: 'Side stripe', boots: 'Boots', linen: 'Linen shirt',
+};
+
+/* =====================================================================
+   2. ROBLOX CLASSIC CLOTHING TEMPLATE (585 × 559)
+   [x, y, w, h] in template pixels, measured from the official template.
+   Torso faces read left→right R | FRONT | L | BACK (wrapping BACK→R).
+   Right limb reads L | B | R | F, left limb F | L | B | R.
+   UP sits above FRONT (its bottom edge touches FRONT's top edge) and
+   DOWN sits below FRONT (its top edge touches FRONT's bottom edge).
+   ===================================================================== */
+const TEX_W = 585, TEX_H = 559;
+const UV = {
+  torso:     { up: [231, 8, 128, 64], right: [165, 74, 64, 128], front: [231, 74, 128, 128], left: [361, 74, 64, 128], back: [427, 74, 128, 128], down: [231, 204, 128, 64] },
+  rightLimb: { up: [217, 289, 64, 64], left: [19, 355, 64, 128], back: [85, 355, 64, 128], right: [151, 355, 64, 128], front: [217, 355, 64, 128], down: [217, 485, 64, 64] },
+  leftLimb:  { up: [308, 289, 64, 64], front: [308, 355, 64, 128], left: [374, 355, 64, 128], back: [440, 355, 64, 128], right: [506, 355, 64, 128], down: [308, 485, 64, 64] },
+};
+// Faces are painted on continuous "wrap strips" so ornaments stay
+// continuous across edges, then sliced into the template.
+//   Torso strip 384×128:  R | F | L | B   (identical order to the template)
+//   Limb strip  256×128:  F | outer | B | inner, drawn for the LEFT limb.
+//   Mirroring that strip horizontally gives inner | B | outer | F, which is
+//   exactly the right limb's L | B | R | F order, so the right limb is
+//   always an honest mirror image of the left one.
+const TORSO_SLICES = [['right', 0], ['front', 64], ['left', 192], ['back', 256]];
+const LEFT_LIMB_SLICES = [['front', 0], ['left', 64], ['back', 128], ['right', 192]];
+const RIGHT_LIMB_SLICES = [['left', 0], ['back', 64], ['right', 128], ['front', 192]];
+
+/* =====================================================================
+   3. UTILITIES
+   ===================================================================== */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function hexToRgb(hex) {
+  let h = String(hex || '').trim().replace('#', '');
+  if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+  const n = parseInt(h, 16);
+  return Number.isNaN(n) || h.length !== 6 ? [128, 128, 128] : [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const darken = (c, t) => mix(c, [0, 0, 0], t);
+const lighten = (c, t) => mix(c, [255, 255, 255], t);
+const rgbToHex = c => '#' + c.map(v => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+const css = (c, a = 1) => `rgba(${Math.round(c[0])},${Math.round(c[1])},${Math.round(c[2])},${a})`;
+function tone(hex) {
+  const b = hexToRgb(hex);
+  return { hex, b, hi: lighten(b, 0.62), lt: lighten(b, 0.3), dk: darken(b, 0.42), dd: darken(b, 0.68) };
+}
+function hashStr(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function makeCanvas(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function flipped(src) {
+  const c = makeCanvas(src.width, src.height), g = c.getContext('2d');
+  g.translate(src.width, 0); g.scale(-1, 1); g.drawImage(src, 0, 0);
+  return c;
+}
+const circDist = (a, b, period) => { const d = Math.abs(((a - b) % period + period) % period); return Math.min(d, period - d); };
+function path(d) { return new Path2D(d); }
+function linePath(x0, y0, x1, y1) { const p = new Path2D(); p.moveTo(x0, y0); p.lineTo(x1, y1); return p; }
+function polyPath(pts, close = false) {
+  const p = new Path2D();
+  pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
+  if (close) p.closePath();
+  return p;
+}
+function transformed(unit, x, y, s, deg = 0, sx = 1) {
+  const p = new Path2D();
+  p.addPath(unit, new DOMMatrix().translate(x, y).rotate(deg).scale(s * sx, s));
+  return p;
+}
+function segNormal(a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return [-dy / l, dx / l]; }
+function offsetPolyline(pts, off) {
+  return pts.map((p, i) => {
+    let n;
+    if (i === 0) n = segNormal(p, pts[1]);
+    else if (i === pts.length - 1) n = segNormal(pts[i - 1], p);
+    else {
+      const n1 = segNormal(pts[i - 1], p), n2 = segNormal(p, pts[i + 1]);
+      const m = [n1[0] + n2[0], n1[1] + n2[1]], ml = Math.hypot(m[0], m[1]) || 1;
+      const cos = (m[0] * n1[0] + m[1] * n1[1]) / ml || 1;
+      n = [m[0] / ml / cos, m[1] / ml / cos];
+    }
+    return [p[0] + n[0] * off, p[1] + n[1] * off];
+  });
+}
+function bandPath(pts, w) {
+  const a = offsetPolyline(pts, -w / 2), b = offsetPolyline(pts, w / 2).reverse();
+  return polyPath(a.concat(b), true);
+}
+// Draw something at x, x±period so features crossing a strip's wrap seam stay continuous.
+function wrapDraw(g, period, fn) { for (const dx of [-period, 0, period]) { g.save(); g.translate(dx, 0); fn(); g.restore(); } }
+function atop(g, fn) { g.save(); g.globalCompositeOperation = 'source-atop'; fn(); g.restore(); }
+function linGrad(g, x0, y0, x1, y1, stops) {
+  const gr = g.createLinearGradient(x0, y0, x1, y1);
+  stops.forEach(([o, c]) => gr.addColorStop(o, c));
+  return gr;
+}
+
+/* =====================================================================
+   4. MATERIALS — tileable procedural textures (128 px tiles)
+   ===================================================================== */
+const TILE = 128;
+const tileCache = new Map();
+function materialTile(kind, hex, seed) {
+  const key = `${kind}|${hex}|${seed}`;
+  if (tileCache.has(key)) return tileCache.get(key);
+  if (tileCache.size > 80) tileCache.clear();
+  const c = makeCanvas(TILE, TILE), g = c.getContext('2d');
+  const img = g.createImageData(TILE, TILE), d = img.data;
+  const rnd = mulberry32(hashStr(key));
+  const base = hexToRgb(hex);
+  const N = kind === 'leather' ? 16 : 8;
+  const lat = Array.from({ length: N * N }, () => rnd() * 2 - 1);
+  const L = (i, j) => lat[(((j % N) + N) % N) * N + (((i % N) + N) % N)];
+  const cell = TILE / N, sm = t => t * t * (3 - 2 * t);
+  for (let y = 0; y < TILE; y++) {
+    for (let x = 0; x < TILE; x++) {
+      const fx = x / cell, fy = y / cell, i = Math.floor(fx), j = Math.floor(fy);
+      const tx = sm(fx - i), ty = sm(fy - j);
+      const low = (L(i, j) * (1 - tx) + L(i + 1, j) * tx) * (1 - ty) + (L(i, j + 1) * (1 - tx) + L(i + 1, j + 1) * tx) * ty;
+      const grain = rnd() * 2 - 1;
+      let f;
+      if (kind === 'wool') {
+        const tw = (x + y) % 4;  // 2/2 twill diagonal
+        f = low * 0.035 + grain * 0.035 + (tw === 0 ? -0.045 : tw === 2 ? 0.018 : 0);
+      } else if (kind === 'leather') {
+        f = low * 0.075 + grain * 0.022;
+      } else if (kind === 'linen') {
+        f = low * 0.025 + grain * 0.03 + (x % 3 === 0 ? -0.03 : 0) + (y % 3 === 0 ? -0.022 : 0);
+      } else {
+        f = grain * 0.03;
+      }
+      const k = (y * TILE + x) * 4;
+      for (let ch = 0; ch < 3; ch++) d[k + ch] = clamp(base[ch] * (1 + f) + f * 34, 0, 255);
+      d[k + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+  tileCache.set(key, c);
+  return c;
+}
+function pat(g, kind, t, K) { return g.createPattern(materialTile(kind, t.hex, K.seed), 'repeat'); }
+
+/* =====================================================================
+   5. ORNAMENT PRIMITIVES
+   ===================================================================== */
+// Twisted round cord (frogging, knots, piping)
+function strokeCord(g, p, w, t, o = {}) {
+  g.save(); g.lineCap = 'round'; g.lineJoin = 'round';
+  if (o.shadow !== false) {
+    g.save(); g.translate(0.45, 0.8); g.strokeStyle = 'rgba(0,0,0,0.42)'; g.lineWidth = w + 0.7; g.stroke(p); g.restore();
+  }
+  g.strokeStyle = css(t.dk); g.lineWidth = w; g.stroke(p);
+  g.strokeStyle = css(t.b); g.lineWidth = Math.max(0.5, w - 0.8); g.stroke(p);
+  g.save(); g.translate(-0.2, -0.35); g.strokeStyle = css(t.hi, 0.85); g.lineWidth = Math.max(0.35, w * 0.3); g.stroke(p); g.restore();
+  if (o.twist !== false && w >= 1.2) {
+    g.setLineDash([0.6, 1.15]); g.lineCap = 'butt'; g.strokeStyle = css(t.dd, 0.42); g.lineWidth = w * 0.86; g.stroke(p);
+  }
+  g.restore();
+}
+// Flat woven lace (collar and cuff edging, hems)
+function strokeLace(g, p, w, t) {
+  g.save(); g.lineCap = 'butt'; g.lineJoin = 'round';
+  g.save(); g.translate(0.4, 0.8); g.strokeStyle = 'rgba(0,0,0,0.4)'; g.lineWidth = w + 0.6; g.stroke(p); g.restore();
+  g.strokeStyle = css(t.dk); g.lineWidth = w; g.stroke(p);
+  g.strokeStyle = css(t.b); g.lineWidth = Math.max(0.5, w - 0.9); g.stroke(p);
+  g.setLineDash([1, 0.9]); g.strokeStyle = css(t.hi, 0.75); g.lineWidth = w * 0.34; g.stroke(p);
+  g.restore();
+}
+// Blurred stroke/fill without ctx.filter (works in every browser).
+function softStroke(g, p, w, color, blur) {
+  g.save(); g.shadowColor = color; g.shadowBlur = blur; g.shadowOffsetX = 4096; g.translate(-4096, 0);
+  g.strokeStyle = '#000'; g.lineWidth = w; g.lineCap = 'round'; g.lineJoin = 'round'; g.stroke(p); g.restore();
+}
+function softFill(g, p, color, blur) {
+  g.save(); g.shadowColor = color; g.shadowBlur = blur; g.shadowOffsetX = 4096; g.translate(-4096, 0);
+  g.fillStyle = '#000'; g.fill(p); g.restore();
+}
+// A cloth crease: a soft shadow with a light ridge above it.
+function crease(g, p, k = 1) {
+  softStroke(g, p, 1.7, `rgba(0,0,0,${0.3 * k})`, 2.4);
+  g.save(); g.translate(-0.6, -1.3); softStroke(g, p, 1.2, `rgba(255,255,255,${0.085 * k})`, 2); g.restore();
+}
+function dropShadow(g, p, blur = 2.5, dx = 0.6, dy = 1.2, a = 0.5) {
+  g.save(); g.shadowColor = `rgba(0,0,0,${a})`; g.shadowBlur = blur; g.shadowOffsetX = dx; g.shadowOffsetY = dy;
+  g.fillStyle = '#000'; g.fill(p); g.restore();
+}
+function metalFill(g, x0, y0, x1, y1, t) {
+  return linGrad(g, x0, y0, x1, y1, [[0, css(lighten(t.b, 0.75))], [0.45, css(t.b)], [1, css(darken(t.b, 0.55))]]);
+}
+// Domed ball button
+function button(g, x, y, r, t) {
+  g.save();
+  g.fillStyle = 'rgba(0,0,0,0.5)'; g.beginPath(); g.arc(x + 0.55, y + 0.8, r + 0.3, 0, Math.PI * 2); g.fill();
+  const gr = g.createRadialGradient(x - r * 0.38, y - r * 0.42, r * 0.08, x, y, r * 1.05);
+  gr.addColorStop(0, css(lighten(t.b, 0.85))); gr.addColorStop(0.35, css(t.b));
+  gr.addColorStop(0.78, css(darken(t.b, 0.45))); gr.addColorStop(1, css(darken(t.b, 0.68)));
+  g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(255,255,255,0.92)'; g.beginPath(); g.arc(x - r * 0.36, y - r * 0.4, Math.max(0.45, r * 0.22), 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+// Fur: many short hairs inside a region, tufting past its edge.
+function fur(g, region, bounds, t, rng, o = {}) {
+  const dir = o.dir ?? Math.PI / 2, density = o.density ?? 1.7, l0 = o.len?.[0] ?? 1.4, l1 = o.len?.[1] ?? 3.4;
+  g.save();
+  dropShadow(g, region, 3, 0.4, 1.4, 0.5);
+  g.fillStyle = css(darken(t.b, 0.1)); g.fill(region);
+  const [bx, by, bw, bh] = bounds;
+  const n = Math.round(bw * bh * density);
+  g.lineCap = 'round';
+  for (let i = 0; i < n; i++) {
+    const px = bx + rng() * bw, py = by + rng() * bh;
+    const a = dir + (rng() - 0.5) * 1.5, l = l0 + rng() * (l1 - l0), s = rng();
+    if (!g.isPointInPath(region, px, py)) continue;
+    const col = s < 0.22 ? darken(t.b, 0.25 + rng() * 0.2) : s < 0.72 ? mix(t.b, lighten(t.b, 0.35), rng()) : lighten(t.b, 0.5 + rng() * 0.35);
+    g.strokeStyle = css(col, 0.9); g.lineWidth = 0.55 + rng() * 0.55;
+    g.beginPath(); g.moveTo(px, py); g.lineTo(px + Math.cos(a) * l, py + Math.sin(a) * l); g.stroke();
+  }
+  g.restore();
+}
+// Hungarian knot: trefoil inside a pointed outer loop. Unit height ≈ 2.95, base at 0.
+const KNOT_UNIT = path(
+  'M0 0 L0 -0.32 ' +
+  'M0 -0.32 C -0.55 -0.28 -1.08 -0.55 -1.0 -0.92 C -0.92 -1.28 -0.36 -1.24 0 -0.98 ' +
+  'M0 -0.32 C 0.55 -0.28 1.08 -0.55 1.0 -0.92 C 0.92 -1.28 0.36 -1.24 0 -0.98 ' +
+  'M0 -0.98 C -0.5 -1.38 -0.42 -2.15 0 -2.6 C 0.42 -2.15 0.5 -1.38 0 -0.98');
+const KNOT_OUTER = path('M -0.25 0.04 C -1.62 -0.28 -1.72 -1.42 -0.62 -1.92 C -0.3 -2.08 -0.12 -2.45 0 -2.98 C 0.12 -2.45 0.3 -2.08 0.62 -1.92 C 1.72 -1.42 1.62 -0.28 0.25 0.04');
+function hungarianKnot(g, x, y, s, t, w, deg = 0, outer = true) {
+  if (outer) strokeCord(g, transformed(KNOT_OUTER, x, y, s, deg), w * 0.9, t);
+  strokeCord(g, transformed(KNOT_UNIT, x, y, s, deg), w, t);
+}
+// Frog-end loop: a pointed eye that ends each row of braid.
+function frogLoop(x, y, dir, len = 8.5, h = 2.5) {
+  const p = new Path2D();
+  p.moveTo(x, y);
+  p.bezierCurveTo(x + dir * len * 0.35, y - h, x + dir * len * 0.78, y - h * 0.55, x + dir * len, y);
+  p.bezierCurveTo(x + dir * len * 0.78, y + h * 0.55, x + dir * len * 0.35, y + h, x, y);
+  return p;
+}
+// Leather strap along a polyline, with edges, sheen and stitching.
+function strap(g, pts, w, t, K, upper = 1) {
+  const band = bandPath(pts, w);
+  dropShadow(g, band, 2.5, 0.6, 1.3, 0.55);
+  g.fillStyle = pat(g, 'leather', t, K); g.fill(band);
+  g.save(); g.clip(band);
+  softStroke(g, polyPath(offsetPolyline(pts, upper * w * 0.12)), w * 0.3, css(lighten(t.b, 0.55), 0.22), 2);
+  g.restore();
+  g.save(); g.lineJoin = 'round';
+  g.strokeStyle = css(lighten(t.b, 0.4), 0.75); g.lineWidth = 0.8; g.stroke(polyPath(offsetPolyline(pts, upper * (w / 2 - 0.45))));
+  g.strokeStyle = css(darken(t.b, 0.55), 0.95); g.lineWidth = 0.9; g.stroke(polyPath(offsetPolyline(pts, -upper * (w / 2 - 0.45))));
+  if (w >= 5) {
+    g.setLineDash([1.1, 1.1]); g.strokeStyle = css(lighten(t.b, 0.3), 0.6); g.lineWidth = 0.55;
+    g.stroke(polyPath(offsetPolyline(pts, w / 2 - 1.9))); g.stroke(polyPath(offsetPolyline(pts, -(w / 2 - 1.9))));
+  }
+  g.restore();
+}
+// Crown, base line at cy, half-width s
+function crown(g, cx, cy, s, t) {
+  const p = new Path2D();
+  p.moveTo(cx - s, cy); p.lineTo(cx - s * 1.08, cy - s * 0.95); p.lineTo(cx - s * 0.52, cy - s * 0.45);
+  p.lineTo(cx, cy - s * 1.15); p.lineTo(cx + s * 0.52, cy - s * 0.45); p.lineTo(cx + s * 1.08, cy - s * 0.95);
+  p.lineTo(cx + s, cy); p.closePath();
+  dropShadow(g, p, 1.2, 0.4, 0.7, 0.6);
+  g.fillStyle = metalFill(g, cx - s, cy - s * 1.2, cx + s, cy, t); g.fill(p);
+  g.strokeStyle = css(t.dd, 0.8); g.lineWidth = 0.45; g.stroke(p);
+  g.fillStyle = css(t.dk); g.fillRect(cx - s, cy - s * 0.28, s * 2, s * 0.28);
+  for (const [bx, by] of [[cx - s * 1.08, cy - s * 0.95], [cx, cy - s * 1.15], [cx + s * 1.08, cy - s * 0.95]]) {
+    g.fillStyle = css(lighten(t.b, 0.5)); g.beginPath(); g.arc(bx, by, Math.max(0.55, s * 0.17), 0, Math.PI * 2); g.fill();
+  }
+}
+// Royal cypher "B" for Brelois, drawn as vector strokes (font independent).
+const CYPHER_B = path(
+  'M -0.42 -1 L -0.42 1 ' +
+  'M -0.75 -1 L 0.1 -1 C 0.75 -1 0.75 -0.06 0.1 -0.06 L -0.42 -0.06 ' +
+  'M 0.1 -0.06 C 0.95 -0.06 0.95 1 0.1 1 L -0.75 1 ' +
+  'M -0.75 1 C -1.05 1.05 -1.2 0.7 -1.0 0.55');
+function cypher(g, cx, cy, s, t) {
+  const p = transformed(CYPHER_B, cx, cy, s, -8);
+  strokeCord(g, p, Math.max(0.8, s * 0.32), t, { twist: false });
+}
+// Cloth faces get gentle volume: darker toward box edges, lighter crown.
+function shadeFaces(g, faces, h, o = {}) {
+  const edge = o.edge ?? 0.16, ew = o.ew ?? 15, top = o.top ?? 0.05, bottom = o.bottom ?? 0.1;
+  atop(g, () => {
+    for (const [x0, w] of faces) {
+      g.fillStyle = linGrad(g, x0, 0, x0 + w, 0, [[0, `rgba(0,0,0,${edge})`], [ew / w, 'rgba(0,0,0,0)'], [1 - ew / w, 'rgba(0,0,0,0)'], [1, `rgba(0,0,0,${edge})`]]);
+      g.fillRect(x0, 0, w, h);
+      g.fillStyle = linGrad(g, 0, 0, 0, h, [[0, `rgba(255,255,255,${top})`], [0.3, 'rgba(255,255,255,0)'], [0.75, 'rgba(0,0,0,0)'], [1, `rgba(0,0,0,${bottom})`]]);
+      g.fillRect(x0, 0, w, h);
+    }
+  });
+}
+
+/* =====================================================================
+   6. SHIRT — HUSSAR DOLMAN
+   ===================================================================== */
+function chestRow(i, n) {
+  const y = 18 + i * (78 / (n - 1));
+  const s = i / (n - 1);
+  const w = 26 + 24 * (1 - Math.pow(s, 1.45)); // braid half-width: broad chest, narrow waist
+  return { y, w, d: w * 0.56 };
+}
+function collarBand(g, ox, K) {
+  const { P } = K;
+  const c = path(`M ${ox + 34} -1 L ${ox + 94} -1 L ${ox + 94} 9 Q ${ox + 94} 12.2 ${ox + 90.8} 12.2 L ${ox + 37.2} 12.2 Q ${ox + 34} 12.2 ${ox + 34} 9 Z`);
+  dropShadow(g, c, 2.5, 0, 1.4, 0.6);
+  g.fillStyle = pat(g, 'wool', P.facing, K); g.fill(c);
+  atop(g, () => { g.fillStyle = linGrad(g, 0, 0, 0, 12, [[0, 'rgba(255,255,255,0.08)'], [1, 'rgba(0,0,0,0.18)']]); g.fillRect(ox + 34, 0, 60, 13); });
+  strokeLace(g, linePath(ox + 34, 1, ox + 94, 1), 1.8, P.lace);
+  strokeLace(g, path(`M ${ox + 34.9} 1.5 L ${ox + 34.9} 9 Q ${ox + 34.9} 11.3 ${ox + 37.2} 11.3 L ${ox + 90.8} 11.3 Q ${ox + 93.1} 11.3 ${ox + 93.1} 9 L ${ox + 93.1} 1.5`), 1.8, P.lace);
+  strokeCord(g, path(`M ${ox + 38.4} 2.5 L ${ox + 38.4} 7.6 Q ${ox + 38.4} 8.4 ${ox + 39.4} 8.4 L ${ox + 88.6} 8.4 Q ${ox + 89.6} 8.4 ${ox + 89.6} 7.6 L ${ox + 89.6} 2.5`), 0.8, P.lace, { twist: false, shadow: false });
+  // embroidered six-point rosettes near the collar ends
+  for (const x of [ox + 44.5, ox + 83.5]) {
+    for (let k = 0; k < 6; k++) {
+      const a = k * Math.PI / 3 + Math.PI / 6;
+      strokeCord(g, linePath(x + Math.cos(a) * 0.9, 5 + Math.sin(a) * 0.9, x + Math.cos(a) * 2.4, 5 + Math.sin(a) * 2.4), 0.75, P.lace, { twist: false, shadow: k === 0 });
+    }
+    button(g, x, 5, 0.9, P.buttons);
+  }
+}
+function paintShirtTorso(K) {
+  const { P, O } = K;
+  const c = makeCanvas(384, 128), g = c.getContext('2d');
+  const FX = 64, BX = 256, cx = FX + 64;
+  // base cloth
+  g.fillStyle = pat(g, 'wool', P.dolman, K); g.fillRect(0, 0, 384, 128);
+  // breeches seen below the dolman's pointed hem
+  const hemPts = [[-1, 121], [FX + 54, 121], [cx, 125.5], [FX + 74, 121], [385, 121]];
+  const below = polyPath(hemPts.concat([[385, 129], [-1, 129]]), true);
+  g.fillStyle = pat(g, 'wool', P.breeches, K); g.fill(below);
+  g.save(); g.clip(below); g.fillStyle = linGrad(g, 0, 121, 0, 127, [[0, 'rgba(0,0,0,0.55)'], [1, 'rgba(0,0,0,0.1)']]); g.fillRect(0, 120, 384, 9); g.restore();
+  strokeLace(g, polyPath(hemPts.map(([x, y]) => [x, y - 0.6])), 1.6, P.lace);
+
+  // ---- tailoring: seams and folds
+  for (const x of [32, 224]) { // side seams under the arms
+    g.strokeStyle = css(P.dolman.dd, 0.8); g.lineWidth = 0.8; g.stroke(linePath(x, 2, x, 120));
+    g.strokeStyle = css(P.dolman.lt, 0.18); g.stroke(linePath(x + 0.9, 2, x + 0.9, 120));
+  }
+  g.strokeStyle = css(P.dolman.dd, 0.9); g.lineWidth = 0.9; g.stroke(linePath(cx, 12, cx, 121)); // front opening
+  for (const dx of [-2.1, 2.1]) strokeLace(g, linePath(cx + dx, 12, cx + dx, 121), 1.5, P.lace);
+  // shoulder pull folds toward the armholes, waist gathering above the sash
+  for (const s of [-1, 1]) {
+    const ex = s < 0 ? FX : FX + 128;
+    crease(g, path(`M ${ex - s * 2} 14 Q ${ex - s * 9} 22 ${ex - s * 12} 34`), 0.9);
+    crease(g, path(`M ${ex - s * 1} 30 Q ${ex - s * 7} 38 ${ex - s * 9} 50`), 0.7);
+    crease(g, path(`M ${ex - s * 3} 92 Q ${ex - s * 10} 95 ${ex - s * 16} 99`), 0.8);
+  }
+  for (const x of [8, 56, 200, 248]) crease(g, path(`M ${x} 70 Q ${x + 4} 84 ${x + 2} 99`), 0.55);
+
+  // ---- back tailoring: side-body seams and laced back seams
+  for (const s of [-1, 1]) {
+    const m = x => BX + 64 + s * (x - 64);
+    g.strokeStyle = css(P.dolman.dd, 0.75); g.lineWidth = 0.8;
+    g.stroke(path(`M ${m(6)} 24 C ${m(16)} 50 ${m(24)} 80 ${m(30)} 101`));
+    strokeCord(g, path(`M ${m(20)} 16 C ${m(30)} 44 ${m(50)} 70 ${m(57)} 100`), 1.8, P.lace);
+    hungarianKnot(g, m(20), 16.5, 2.6, P.lace, 1.1, 0, false);
+  }
+  g.strokeStyle = css(P.dolman.dd, 0.85); g.lineWidth = 0.8; g.stroke(linePath(BX + 64, 12, BX + 64, 80));
+  hungarianKnot(g, BX + 64, 100.5, 6.2, P.lace, 1.4);
+  crease(g, path(`M ${BX + 18} 60 Q ${BX + 26} 76 ${BX + 30} 96`), 0.6);
+  crease(g, path(`M ${BX + 110} 60 Q ${BX + 102} 76 ${BX + 98} 96`), 0.6);
+
+  // ---- collars (front and back)
+  collarBand(g, FX, K);
+  collarBand(g, BX, K);
+  g.strokeStyle = css(P.facing.dd); g.lineWidth = 0.8; g.stroke(linePath(cx, 0, cx, 12)); // collar hooks
+  button(g, cx, 4.5, 1, P.buttons); button(g, cx, 9, 1, P.buttons);
+
+  // ---- chest frogging: rows of twisted cord, end loops, three rows of buttons
+  const n = clamp(O.frogRows | 0, 8, 20);
+  const rows = Array.from({ length: n }, (_, i) => chestRow(i, n));
+  for (const r of rows) {
+    softStroke(g, linePath(cx - r.w - 7, r.y + 1.2, cx + r.w + 7, r.y + 1.2), 2.6, 'rgba(0,0,0,0.35)', 1.5);
+    strokeCord(g, linePath(cx - r.w, r.y, cx + r.w, r.y), 2.2, P.lace);
+    strokeCord(g, frogLoop(cx + r.w, r.y, 1), 1.15, P.lace, { twist: false });
+    strokeCord(g, frogLoop(cx - r.w, r.y, -1), 1.15, P.lace, { twist: false });
+  }
+  for (const r of rows) { button(g, cx, r.y, 2.2, P.buttons); button(g, cx - r.d, r.y, 2.1, P.buttons); button(g, cx + r.d, r.y, 2.1, P.buttons); }
+
+  // ---- barrel sash (or a plain sword belt when the sash is off)
+  if (O.sash) paintBarrelSash(g, K, FX, cx);
+  else {
+    strap(g, [[-2, 105.5], [386, 105.5]], 7, P.leather, K);
+    const plate = path(`M ${cx - 6} 102 L ${cx + 6} 102 L ${cx + 6} 109 L ${cx - 6} 109 Z`);
+    dropShadow(g, plate, 1.5); g.fillStyle = metalFill(g, cx - 6, 102, cx + 6, 109, P.buttons); g.fill(plate);
+    g.strokeStyle = css(P.buttons.dd, 0.7); g.lineWidth = 0.5; g.stroke(plate);
+    strokeCord(g, path(`M ${cx - 3} 107.5 C ${cx - 1} 103 ${cx + 1} 108 ${cx + 3} 103.5`), 0.9, P.buttons, { twist: false });
+  }
+
+  // ---- pouch belt over the left shoulder, cartridge pouch at the back
+  if (O.crossbelt) {
+    const front = [[175.2, -7], [64, 87], [-6, 87]];
+    wrapDraw(g, 384, () => strap(g, front, 11, P.leather, K, 1));
+    strap(g, [[276.1, -7], [343, 87]], 11, P.leather, K, -1);
+    pouchBeltFittings(g, K);
+    paintPouch(g, BX + 82, 78, 42, 21, K);
+  }
+
+  // ---- pelisse fur collar draped over the left shoulder
+  if (O.pelisse) {
+    const region = path('M 170 -3 L 278 -3 L 278 3.5 Q 260 6.5 224 5 Q 196 6.5 170 3.5 Z');
+    fur(g, region, [168, -3, 112, 11], P.fur, K.rng, { dir: Math.PI / 2, len: [1.2, 3] });
+  }
+
+  shadeFaces(g, [[0, 64], [64, 128], [192, 64], [256, 128]], 128, { edge: 0.18 });
+  return c;
+}
+function paintBarrelSash(g, K, FX, cx) {
+  const { P } = K;
+  const y0 = 101, y1 = 117, bh = (y1 - y0) / 3;
+  const band = path(`M -1 ${y0} L 385 ${y0} L 385 ${y1} L -1 ${y1} Z`);
+  dropShadow(g, band, 2.5, 0, 1.4, 0.55);
+  g.fillStyle = css(P.sashCord.dk); g.fill(band);
+  for (let k = 0; k < 3; k++) { // three bundles of twisted cords
+    const yc = y0 + bh * k;
+    for (let s = 0; s < 2; s++) strokeCord(g, linePath(-1, yc + 1.45 + s * 2.45, 385, yc + 1.45 + s * 2.45), 2.4, P.sashCord, { shadow: false });
+    softStroke(g, linePath(-1, yc + bh - 0.2, 385, yc + bh - 0.2), 0.8, 'rgba(0,0,0,0.5)', 1);
+  }
+  for (let x = 6; x < 384; x += 12) { // cords bulge between barrels: light in the middle, pinched at the barrels
+    for (let k = 0; k < 3; k++) {
+      const yc = y0 + bh * k + bh / 2;
+      softFill(g, path(`M ${x + 2} ${yc} Q ${x + 6} ${yc - 2.6} ${x + 10} ${yc} Q ${x + 6} ${yc + 2.6} ${x + 2} ${yc} Z`), css(lighten(P.sashCord.b, 0.5), 0.35), 2);
+    }
+    softFill(g, path(`M ${x - 3.2} ${y0} L ${x + 3.2} ${y0} L ${x + 3.2} ${y1} L ${x - 3.2} ${y1} Z`), 'rgba(0,0,0,0.42)', 2.2);
+  }
+  for (let x = 6; x < 384; x += 12) { // silver barrels gathering each bundle
+    for (let k = 0; k < 3; k++) {
+      const yc = y0 + bh * k, bx = x - 1.7, by = yc + 0.7, bw = 3.4, bhh = bh - 1.4;
+      g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(bx + 0.5, by + 0.6, bw, bhh);
+      g.fillStyle = linGrad(g, 0, by, 0, by + bhh, [[0, css(lighten(P.sashBarrel.b, 0.55))], [0.3, css(P.sashBarrel.b)], [0.75, css(darken(P.sashBarrel.b, 0.35))], [1, css(darken(P.sashBarrel.b, 0.6))]]);
+      g.fillRect(bx, by, bw, bhh);
+      g.fillStyle = css(P.sashBarrel.dd, 0.5); g.fillRect(bx + 1.1, by, 0.45, bhh); g.fillRect(bx + 2.2, by, 0.45, bhh);
+    }
+  }
+  // knot and tasselled cords hanging at the left hip
+  const kx = FX + 110;
+  const knot = path(`M ${kx - 5} 106 Q ${kx} 101.5 ${kx + 5} 106 Q ${kx + 6} 111 ${kx} 113 Q ${kx - 6} 111 ${kx - 5} 106 Z`);
+  dropShadow(g, knot, 2, 0.5, 1, 0.6);
+  g.fillStyle = css(P.sashCord.b); g.fill(knot);
+  strokeCord(g, path(`M ${kx - 4} 106 Q ${kx} 109 ${kx + 4} 106 M ${kx - 3.5} 109.5 Q ${kx} 112 ${kx + 3.5} 109.5`), 1.3, P.sashCord, { shadow: false });
+  for (const [dx, len] of [[-2.2, 120.5], [2.6, 121.5]]) {
+    strokeCord(g, path(`M ${kx + dx * 0.5} 112 Q ${kx + dx} 116 ${kx + dx} ${len}`), 1.4, P.sashCord);
+    const tx = kx + dx, ty = len;
+    g.fillStyle = metalFill(g, tx - 1.5, ty - 1.5, tx + 1.5, ty + 1.5, P.sashBarrel);
+    g.beginPath(); g.arc(tx, ty, 1.5, 0, Math.PI * 2); g.fill();
+    for (let f = -2; f <= 2; f++) strokeCord(g, linePath(tx + f * 0.6, ty + 1, tx + f * 0.95, ty + 6.2), 0.55, P.sashBarrel, { twist: false, shadow: f === 2 });
+  }
+}
+function pouchBeltFittings(g, K) {
+  const { P } = K;
+  const at = y => 175.2 - 111.2 * ((y + 7) / 94);
+  const ang = 49.8;
+  const sx = at(27), lx = at(52);
+  // two fine chains from the shield to the lion boss, with prickers
+  for (const off of [-2.8, 2.8]) {
+    const n = [0.646, 0.764];
+    const a = [sx + n[0] * off * 1.0, 31 + n[1] * off * 0.2], b = [lx + n[0] * off, 50 + n[1] * off * 0.2];
+    const mid = [(a[0] + b[0]) / 2 + 1.5, (a[1] + b[1]) / 2 + 1.8];
+    const ch = path(`M ${a[0]} ${a[1]} Q ${mid[0]} ${mid[1]} ${b[0]} ${b[1]}`);
+    g.save(); g.setLineDash([0.9, 0.55]); g.lineCap = 'round';
+    g.strokeStyle = 'rgba(0,0,0,0.55)'; g.lineWidth = 1.2; g.save(); g.translate(0.4, 0.7); g.stroke(ch); g.restore();
+    g.strokeStyle = css(P.buttons.b); g.lineWidth = 0.9; g.stroke(ch); g.restore();
+  }
+  for (const [dx, len] of [[-1.5, 8], [1.6, 6.5]]) {
+    const x0 = sx - 2 + dx, y0 = 34;
+    g.strokeStyle = 'rgba(0,0,0,0.5)'; g.lineWidth = 1; g.stroke(linePath(x0 + 0.4, y0 + 0.7, x0 + 0.4 - 1.5, y0 + len + 0.7));
+    g.strokeStyle = css(lighten(P.buttons.b, 0.2)); g.lineWidth = 0.7; g.stroke(linePath(x0, y0, x0 - 1.5, y0 + len));
+  }
+  // shield plate
+  g.save(); g.translate(sx, 27); g.rotate(ang * Math.PI / 180);
+  const sh = path('M -4 -4.6 L 4 -4.6 L 4 0.4 Q 4 3.8 0 5.6 Q -4 3.8 -4 0.4 Z');
+  dropShadow(g, sh, 1.8, 0.4, 0.9, 0.6);
+  g.fillStyle = metalFill(g, -4, -5, 4, 5.6, P.buttons); g.fill(sh);
+  g.strokeStyle = css(P.buttons.dd, 0.8); g.lineWidth = 0.5; g.stroke(sh);
+  g.strokeStyle = css(P.buttons.dk, 0.8); g.lineWidth = 0.45; g.stroke(path('M -2.6 -3.2 L 2.6 -3.2 L 2.6 0.3 Q 2.6 2.6 0 3.9 Q -2.6 2.6 -2.6 0.3 Z'));
+  g.restore();
+  crown(g, sx, 26.2, 1.6, P.buttons);
+  // lion-head boss
+  button(g, lx, 52, 2.4, P.buttons);
+  g.fillStyle = css(P.buttons.dd, 0.6); g.fillRect(lx - 1, 51.8, 0.6, 0.6); g.fillRect(lx + 0.4, 51.8, 0.6, 0.6);
+}
+function paintPouch(g, x, y, w, h, K) {
+  const { P } = K;
+  const body = path(`M ${x} ${y + 2} Q ${x} ${y} ${x + 2} ${y} L ${x + w - 2} ${y} Q ${x + w} ${y} ${x + w} ${y + 2} L ${x + w} ${y + h - 3} Q ${x + w} ${y + h} ${x + w - 3} ${y + h} L ${x + 3} ${y + h} Q ${x} ${y + h} ${x} ${y + h - 3} Z`);
+  dropShadow(g, body, 3, 0.8, 1.8, 0.6);
+  g.fillStyle = pat(g, 'leather', P.leather, K); g.fill(body);
+  const flap = path(`M ${x + 0.8} ${y + 1} L ${x + w - 0.8} ${y + 1} L ${x + w - 0.8} ${y + h - 6} Q ${x + w / 2} ${y + h - 2.5} ${x + 0.8} ${y + h - 6} Z`);
+  g.save(); g.clip(body);
+  g.fillStyle = linGrad(g, 0, y, 0, y + h, [[0, css(lighten(P.leather.b, 0.2), 0.5)], [0.5, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.35)']]); g.fillRect(x, y, w, h);
+  g.restore();
+  softStroke(g, path(`M ${x + 1} ${y + h - 6} Q ${x + w / 2} ${y + h - 2.5} ${x + w - 1} ${y + h - 6}`), 1.2, 'rgba(0,0,0,0.7)', 1.5);
+  g.strokeStyle = css(lighten(P.leather.b, 0.35), 0.8); g.lineWidth = 0.7; g.stroke(flap);
+  g.save(); g.setLineDash([1, 1]); g.strokeStyle = css(lighten(P.leather.b, 0.28), 0.6); g.lineWidth = 0.5;
+  g.stroke(path(`M ${x + 2.6} ${y + 2.8} L ${x + w - 2.6} ${y + 2.8} L ${x + w - 2.6} ${y + h - 7.4} Q ${x + w / 2} ${y + h - 4.2} ${x + 2.6} ${y + h - 7.4} Z`)); g.restore();
+  // crowned cypher badge
+  const bx = x + w / 2;
+  crown(g, bx, y + 6.3, 2.6, P.buttons);
+  cypher(g, bx, y + 11.3, 3.3, P.buttons);
+  for (const rx of [x + 1.5, x + w - 1.5]) { // belt rings
+    g.strokeStyle = 'rgba(0,0,0,0.6)'; g.lineWidth = 1.3; g.beginPath(); g.arc(rx + 0.4, y + 1.4, 1.9, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = css(P.buttons.b); g.lineWidth = 0.9; g.beginPath(); g.arc(rx, y + 1, 1.9, 0, Math.PI * 2); g.stroke();
+  }
+}
+function paintShirtTorsoUp(K) {
+  const { P, O } = K;
+  const c = makeCanvas(128, 64), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.dolman, K); g.fillRect(0, 0, 128, 64);
+  // shoulder seams and twisted shoulder cords
+  for (const [x0, x1, bx] of [[34, 1, 29.5], [94, 127, 98.5]]) {
+    g.strokeStyle = css(P.dolman.dd, 0.85); g.lineWidth = 0.8; g.stroke(linePath(x0, 32, x1, 32));
+    strokeCord(g, linePath(x0 - Math.sign(x0 - x1) * 1, 32, x1, 32), 2.2, P.lace);
+    button(g, bx, 32, 2.2, P.buttons);
+  }
+  // standing collar seen from above, continuous with the front and back collar bands
+  const ring = path('M 34 -1 L 94 -1 L 94 65 L 34 65 Z');
+  dropShadow(g, ring, 3, 0, 0, 0.55);
+  g.fillStyle = pat(g, 'wool', P.facing, K); g.fill(ring);
+  g.fillStyle = css(darken(P.dolman.b, 0.55)); g.fillRect(40, 6, 48, 52);
+  g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(40, 6, 48, 3); g.fillRect(40, 6, 3, 52);
+  strokeLace(g, linePath(34.9, -1, 34.9, 65), 1.8, P.lace);
+  strokeLace(g, linePath(93.1, -1, 93.1, 65), 1.8, P.lace);
+  strokeCord(g, path('M 40.5 6 L 87.5 6 L 87.5 58 L 40.5 58 Z'), 1.1, P.lace, { twist: false, shadow: false });
+  if (O.crossbelt) {
+    const b = path('M 94.5 65 L 111.5 65 L 109.75 -1 L 96.25 -1 Z');
+    dropShadow(g, b, 2.5, 0.6, 0, 0.55);
+    g.fillStyle = pat(g, 'leather', P.leather, K); g.fill(b);
+    g.strokeStyle = css(lighten(P.leather.b, 0.4), 0.7); g.lineWidth = 0.8; g.stroke(linePath(95, 64, 96.7, 0));
+    g.strokeStyle = css(darken(P.leather.b, 0.5)); g.stroke(linePath(111, 64, 109.3, 0));
+  }
+  if (O.pelisse) fur(g, path('M 108 -3 L 131 -3 L 131 67 L 108 67 Q 105.5 32 108 -3 Z'), [104, -3, 28, 70], P.fur, K.rng, { dir: Math.PI, len: [1.2, 3.2] });
+  atop(g, () => {
+    g.fillStyle = linGrad(g, 0, 0, 128, 0, [[0, 'rgba(0,0,0,0.16)'], [0.12, 'rgba(0,0,0,0)'], [0.88, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.16)']]);
+    g.fillRect(0, 0, 128, 64);
+  });
+  return c;
+}
+function paintShirtTorsoDown(K) {
+  const { P } = K;
+  const c = makeCanvas(128, 64), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.breeches, K); g.fillRect(0, 0, 128, 64);
+  g.strokeStyle = css(P.breeches.dd, 0.8); g.lineWidth = 0.8; g.stroke(linePath(64, 0, 64, 64));
+  atop(g, () => { g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, 0, 128, 64); });
+  return c;
+}
+
+// ---- sleeves (canonical LEFT arm strip: F | outer | B | inner)
+const HAND_Y = 114;
+function cuffTopFn(O) {
+  const apex = O.cuffPoint === 'outer' ? 96 : 32;
+  return { apex, top: u => { const s = 1 - circDist(u, apex, 256) / 27; return 101 - (s > 0 ? 19 * Math.pow(s, 1.15) : 0); } };
+}
+function paintArmStrip(K, withPelisse) {
+  const { P, O } = K;
+  const c = makeCanvas(256, 128), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.dolman, K); g.fillRect(0, 0, 256, 128);
+  // sleeve head: shadow under the shoulder and the armhole seam
+  g.fillStyle = linGrad(g, 0, 0, 0, 12, [[0, 'rgba(0,0,0,0.3)'], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, 256, 12);
+  g.strokeStyle = css(P.dolman.dd, 0.9); g.lineWidth = 0.8; g.stroke(linePath(0, 2.4, 256, 2.4));
+  g.strokeStyle = css(P.dolman.lt, 0.16); g.stroke(linePath(0, 3.3, 256, 3.3));
+  strokeCord(g, linePath(-1, 1.4, 257, 1.4), 1, P.facing, { twist: false });
+  const { apex, top } = cuffTopFn(O);
+  // front seam (inner side) and laced rear seam
+  g.strokeStyle = css(P.dolman.dd, 0.8); g.lineWidth = 0.8; g.stroke(linePath(226, 4, 226, top(226)));
+  g.strokeStyle = css(P.dolman.lt, 0.15); g.stroke(linePath(226.9, 4, 226.9, top(226)));
+  const rear = 142;
+  strokeCord(g, linePath(rear, 3.4, rear, top(rear) - 5.5), 1.5, P.lace);
+  // elbow: creases on the inner-front, a worn sheen at the back of the elbow
+  wrapDraw(g, 256, () => {
+    crease(g, path('M -18 58 Q -6 62 10 59'), 1);
+    crease(g, path('M -14 64 Q -2 68 12 64'), 0.9);
+    crease(g, path('M -10 70.5 Q 0 73.5 8 71'), 0.7);
+  });
+  softFill(g, path('M 150 54 Q 162 50 174 55 Q 170 70 160 72 Q 150 68 150 54 Z'), 'rgba(255,255,255,0.035)', 7);
+  crease(g, path('M 150 74 Q 160 77 170 73'), 0.5);
+  crease(g, path('M 40 26 Q 46 40 44 52'), 0.45);
+  crease(g, path('M 84 30 Q 88 44 86 58'), 0.45);
+  // pointed cuff in the facing colour with silver braid
+  const pts = []; for (let u = -1; u <= 257; u += 0.5) pts.push([u, top(u)]);
+  const cuff = polyPath(pts.concat([[257, HAND_Y], [-1, HAND_Y]]), true);
+  dropShadow(g, cuff, 2, 0, 0.8, 0.45);
+  g.fillStyle = pat(g, 'wool', P.facing, K); g.fill(cuff);
+  g.save(); g.clip(cuff); g.fillStyle = linGrad(g, 0, 80, 0, HAND_Y, [[0, 'rgba(255,255,255,0.05)'], [1, 'rgba(0,0,0,0.22)']]); g.fillRect(0, 78, 256, 40); g.restore();
+  strokeCord(g, polyPath(pts.map(([u, y]) => [u, y - 3.6])), 1.1, P.lace, { twist: false });
+  strokeLace(g, polyPath(pts), 2.2, P.lace);
+  strokeCord(g, polyPath(pts.map(([u, y]) => [u, y + 3.3])), 0.9, P.lace, { twist: false, shadow: false });
+  strokeLace(g, linePath(-1, HAND_Y - 1, 257, HAND_Y - 1), 1.8, P.lace);
+  hungarianKnot(g, apex, top(apex) - 4.6, 6.4, P.lace, 1.35);
+  if (withPelisse) paintPelisseOnArm(g, K);
+  shadeFaces(g, [[0, 64], [64, 64], [128, 64], [192, 64]], 128, { edge: 0.15, ew: 12 });
+  // hands
+  if (O.hands === 'gloves') {
+    const gl = tone(O.gloveColor);
+    g.clearRect(0, HAND_Y, 256, 128 - HAND_Y);
+    g.fillStyle = pat(g, 'leather', gl, K); g.fillRect(0, HAND_Y, 256, 128 - HAND_Y);
+    g.fillStyle = linGrad(g, 0, HAND_Y, 0, 128, [[0, 'rgba(0,0,0,0.3)'], [0.3, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.12)']]); g.fillRect(0, HAND_Y, 256, 128 - HAND_Y);
+    for (const u of [16, 26, 36, 46]) { g.strokeStyle = css(gl.dk, 0.45); g.lineWidth = 0.6; g.stroke(linePath(u, 120, u, 128)); }
+  } else {
+    g.clearRect(0, HAND_Y, 256, 128 - HAND_Y);
+  }
+  return c;
+}
+function paintPelisseOnArm(g, K) {
+  const { P } = K, rng = K.rng;
+  const u0 = 42, u1 = 203;
+  const hem = u => 83 + 1.6 * Math.sin(u * 0.11) + 1.1 * Math.sin(u * 0.037 + 1);
+  const bodyPts = [[u0, -2], [u1, -2]];
+  for (let u = u1; u >= u0; u -= 1) bodyPts.push([u, hem(u)]);
+  const body = polyPath(bodyPts, true);
+  dropShadow(g, body, 4, 0, 2.2, 0.6);
+  g.fillStyle = pat(g, 'wool', P.pelisse, K); g.fill(body);
+  g.save(); g.clip(body);
+  for (let u = u0 + 10; u < u1; u += 7 + rng() * 6) { // hanging drapery
+    const x0 = u + rng() * 2, x1 = u + (rng() - 0.5) * 5;
+    softStroke(g, linePath(x0, 8, x1, 90), 2 + rng() * 2, 'rgba(0,0,0,0.3)', 3);
+    softStroke(g, linePath(x0 - 2.5, 8, x1 - 2.5, 90), 1.4, 'rgba(255,255,255,0.08)', 2.5);
+  }
+  g.fillStyle = linGrad(g, 0, 0, 0, 14, [[0, 'rgba(0,0,0,0.3)'], [1, 'rgba(0,0,0,0)']]); g.fillRect(u0, 0, u1 - u0, 14);
+  g.restore();
+  // pelisse front: frogging and buttons running from the fur edge
+  for (let i = 0; i < 10; i++) {
+    const y = 9 + i * 7.2, a = 54, b = 86 - i * 0.7;
+    strokeCord(g, linePath(a, y, b, y), 1.7, P.lace);
+    strokeCord(g, frogLoop(b, y, 1, 7, 2.2), 1, P.lace, { twist: false });
+    button(g, a, y, 1.9, P.buttons);
+  }
+  // the empty sleeve hanging behind
+  const sl = path('M 136 4 Q 159 1 182 4 L 180 92 Q 159 95 139 92 Z');
+  dropShadow(g, sl, 3.5, -1, 1.5, 0.55);
+  g.fillStyle = pat(g, 'wool', P.pelisse, K); g.fill(sl);
+  g.save(); g.clip(sl);
+  softStroke(g, linePath(138, 4, 140, 92), 5, 'rgba(0,0,0,0.45)', 4);
+  softStroke(g, linePath(181, 4, 179, 92), 5, 'rgba(0,0,0,0.5)', 4);
+  softStroke(g, linePath(152, 8, 153, 88), 4, 'rgba(255,255,255,0.08)', 4);
+  g.restore();
+  strokeCord(g, linePath(170, 6, 170, 74), 1.4, P.lace);
+  hungarianKnot(g, 159, 85.5, 4.6, P.lace, 1.1);
+  fur(g, path('M 136.5 85 Q 159 82.5 181 85 L 181.5 96 Q 159 98.5 136 96 Z'), [134, 81, 50, 19], P.fur, rng, { dir: Math.PI / 2 });
+  // fur along the opening edges and around the hem
+  fur(g, path(`M ${u0 - 1} -3 L ${u0 + 8.5} -3 L ${u0 + 8.5} ${hem(u0) + 8} L ${u0 - 1} ${hem(u0) + 8} Z`), [u0 - 3, -3, 14, 100], P.fur, rng, { dir: Math.PI / 2 + 0.2 });
+  const hemPts = [];
+  for (let u = u0; u <= u1; u += 1) hemPts.push([u, hem(u) - 1.5]);
+  for (let u = u1; u >= u0; u -= 1) hemPts.push([u, hem(u) + 8.5]);
+  fur(g, polyPath(hemPts, true), [u0 - 2, 75, u1 - u0 + 4, 22], P.fur, rng, { dir: Math.PI / 2 });
+  fur(g, path(`M ${u1 - 8.5} -3 L ${u1 + 1} -3 L ${u1 + 1} ${hem(u1) + 8} L ${u1 - 8.5} ${hem(u1) + 8} Z`), [u1 - 11, -3, 14, 100], P.fur, rng, { dir: Math.PI / 2 - 0.2 });
+}
+function paintArmUp(K, withPelisse) {
+  const { P } = K;
+  const c = makeCanvas(64, 64), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.dolman, K); g.fillRect(0, 0, 64, 64);
+  g.strokeStyle = css(P.dolman.dd, 0.85); g.lineWidth = 0.8; g.strokeRect(2.4, 2.4, 59.2, 59.2);
+  g.fillStyle = linGrad(g, 0, 0, 64, 0, [[0, 'rgba(0,0,0,0.2)'], [0.3, 'rgba(0,0,0,0)'], [1, 'rgba(255,255,255,0.03)']]); g.fillRect(0, 0, 64, 64);
+  if (withPelisse) {
+    g.fillStyle = pat(g, 'wool', P.pelisse, K); g.fillRect(0, 0, 64, 64);
+    softStroke(g, path('M 30 0 Q 40 30 60 64'), 3, 'rgba(0,0,0,0.3)', 3);
+    fur(g, path('M -3 -3 L 23 -3 Q 34 30 53 67 L -3 67 Z'), [-3, -3, 58, 70], P.fur, K.rng, { dir: Math.PI * 0.25, len: [1.4, 3.6] });
+  }
+  return c;
+}
+function paintArmDown(K) {
+  const { O } = K;
+  const c = makeCanvas(64, 64);
+  if (O.hands === 'gloves') {
+    const g = c.getContext('2d'), gl = tone(O.gloveColor);
+    g.fillStyle = pat(g, 'leather', gl, K); g.fillRect(0, 0, 64, 64);
+    g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(0, 0, 64, 64);
+  }
+  return c; // bare hands: transparent so the avatar's skin shows
+}
+
+/* =====================================================================
+   7. PANTS — HUSSAR BREECHES AND BOOTS
+   ===================================================================== */
+// Boot top, heart-shaped: high at the front with a V notch, dipping at the sides.
+function bootTop(u) {
+  const d = circDist(u, 32, 256);
+  if (d <= 6) return 56.5 + (6 - d) * 1.05;
+  if (d <= 64) return 56.5 + Math.pow((d - 6) / 58, 1.25) * 8.5;
+  return 65 + ((d - 64) / 64) * 3;
+}
+function sideStripe(g, x, y0, y1, K) {
+  const { P } = K;
+  g.save(); g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(x - 2.2, y0, 5.4, y1 - y0); g.restore();
+  g.fillStyle = pat(g, 'wool', P.trouserStripe, K); g.fillRect(x - 1.6, y0, 3.2, y1 - y0);
+  strokeCord(g, linePath(x - 2.1, y0, x - 2.1, y1), 1, P.trouserLace, { twist: false, shadow: false });
+  strokeCord(g, linePath(x + 2.1, y0, x + 2.1, y1), 1, P.trouserLace, { twist: false, shadow: false });
+}
+function thighKnot(g, cx, K) {
+  const { P } = K;
+  const L = x => cx - 32 + x;
+  const outer = path(`M ${L(14)} -2 C ${L(14)} 16 ${L(24)} 33 ${L(32)} 46 C ${L(40)} 33 ${L(50)} 16 ${L(50)} -2`);
+  const inner = path(`M ${L(22)} -2 C ${L(22)} 13 ${L(27)} 25 ${L(32)} 33.5 C ${L(37)} 25 ${L(42)} 13 ${L(42)} -2`);
+  const lozenge = path(`M ${L(32)} 35 C ${L(29.6)} 38.5 ${L(30)} 42 ${L(32)} 44.6 C ${L(34)} 42 ${L(34.4)} 38.5 ${L(32)} 35 Z`);
+  const tre = path(
+    `M ${L(32)} 46 C ${L(28)} 45.6 ${L(25)} 48.6 ${L(26.4)} 51.2 C ${L(27.8)} 53.6 ${L(31)} 51.4 ${L(32)} 47.2 ` +
+    `M ${L(32)} 46 C ${L(36)} 45.6 ${L(39)} 48.6 ${L(37.6)} 51.2 C ${L(36.2)} 53.6 ${L(33)} 51.4 ${L(32)} 47.2 ` +
+    `M ${L(32)} 47.2 C ${L(29.6)} 50.4 ${L(30)} 54.4 ${L(32)} 56.6 C ${L(34)} 54.4 ${L(34.4)} 50.4 ${L(32)} 47.2`);
+  strokeCord(g, outer, 1.9, P.trouserLace);
+  strokeCord(g, inner, 1.7, P.trouserLace);
+  strokeCord(g, lozenge, 1.1, P.trouserLace, { twist: false });
+  strokeCord(g, tre, 1.3, P.trouserLace);
+}
+function paintSabretache(g, K) {
+  const { P } = K;
+  for (const [x0, x1] of [[80, 82.5], [113, 110]]) strap(g, [[x0, -3], [x1, 17]], 2.4, P.leather, K, 1);
+  const outline = path('M 76 17 L 116 17 L 116 46 Q 116 51.5 110.5 53.5 L 99 57.8 Q 96 59.2 93 57.8 L 81.5 53.5 Q 76 51.5 76 46 Z');
+  dropShadow(g, outline, 3.5, 1.2, 2, 0.6);
+  g.fillStyle = pat(g, 'leather', P.leather, K); g.fill(outline);
+  const face = path('M 77.6 18.6 L 114.4 18.6 L 114.4 45.6 Q 114.4 50.3 109.8 52 L 98.6 56.2 Q 96 57.4 93.4 56.2 L 82.2 52 Q 77.6 50.3 77.6 45.6 Z');
+  g.fillStyle = pat(g, 'wool', P.facing, K); g.fill(face);
+  g.save(); g.clip(face);
+  g.fillStyle = linGrad(g, 0, 18, 0, 58, [[0, 'rgba(255,255,255,0.08)'], [1, 'rgba(0,0,0,0.3)']]); g.fillRect(76, 17, 40, 42);
+  g.restore();
+  strokeLace(g, path('M 80.2 21.2 L 111.8 21.2 L 111.8 45 Q 111.8 48.6 108.4 50 L 98 53.8 Q 96 54.7 94 53.8 L 83.6 50 Q 80.2 48.6 80.2 45 Z'), 2, P.lace);
+  strokeCord(g, path('M 83.3 24.3 L 108.7 24.3 L 108.7 44.4 Q 108.7 46.6 106.6 47.5 L 97.4 50.8 Q 96 51.4 94.6 50.8 L 85.4 47.5 Q 83.3 46.6 83.3 44.4 Z'), 0.8, P.lace, { twist: false, shadow: false });
+  crown(g, 96, 32.5, 5.2, P.buttons);
+  cypher(g, 96, 41.5, 5.4, P.buttons);
+  for (const x of [82.5, 110]) { button(g, x, 18.4, 1.4, P.buttons); }
+}
+function paintLegStrip(K, withSabretache) {
+  const { P, O } = K;
+  const c = makeCanvas(256, 128), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.breeches, K); g.fillRect(0, 0, 256, 128);
+  // shade where the leg meets the torso
+  g.fillStyle = linGrad(g, 0, 0, 0, 8, [[0, 'rgba(0,0,0,0.32)'], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, 256, 8);
+  // seams: inner leg seam and the back seam line
+  for (const u of [224, 160]) { g.strokeStyle = css(P.breeches.dd, 0.8); g.lineWidth = 0.8; g.stroke(linePath(u, 0, u, 70)); }
+  // folds: hip and crotch pulls, knee bunching above the boots
+  wrapDraw(g, 256, () => {
+    crease(g, path('M -6 6 Q 2 14 10 18'), 0.9);
+    crease(g, path('M -8 16 Q 0 22 6 28'), 0.7);
+  });
+  crease(g, path('M 52 4 Q 56 12 60 16'), 0.6);
+  crease(g, path('M 136 49 Q 147 45 158 48.5 Q 168 51.5 184 47'), 0.85);
+  crease(g, path('M 141 55.5 Q 152 52.5 163 55 Q 172 57 182 54'), 0.7);
+  softFill(g, path('M 18 44 Q 32 38 46 44 Q 44 56 32 58 Q 20 56 18 44 Z'), 'rgba(255,255,255,0.06)', 5);
+  crease(g, path('M 66 59 Q 72 55.5 80 57.5'), 0.55);
+  crease(g, path('M 108 56 Q 114 53 121 55'), 0.5);
+  crease(g, path('M 198 58 Q 205 55 212 57.5'), 0.5);
+  crease(g, path('M 238 57 Q 246 54 252 56.5'), 0.55);
+  // outer seam: crimson stripe edged in silver
+  sideStripe(g, 96, 0, bootTop(96) + 1, K);
+  // Hungarian knots on the front of the thigh
+  thighKnot(g, 32, K);
+
+  // ---- hussar boot
+  const tops = []; for (let u = -1; u <= 257; u += 0.5) tops.push([u, bootTop(u)]);
+  const boot = polyPath(tops.concat([[257, 129], [-1, 129]]), true);
+  dropShadow(g, boot, 2.5, 0, -0.8, 0.5);
+  g.fillStyle = pat(g, 'leather', P.boots, K); g.fill(boot);
+  g.save(); g.clip(boot);
+  // polished leather: dark facets toward edges, soft highlights, mirror streaks
+  for (const x0 of [0, 64, 128, 192]) {
+    g.fillStyle = linGrad(g, x0, 0, x0 + 64, 0, [[0, 'rgba(0,0,0,0.45)'], [0.18, 'rgba(0,0,0,0)'], [0.32, 'rgba(255,255,255,0.05)'], [0.55, 'rgba(0,0,0,0)'], [0.85, 'rgba(0,0,0,0.12)'], [1, 'rgba(0,0,0,0.5)']]);
+    g.fillRect(x0, 50, 64, 80);
+  }
+  for (const [u, k] of [[22, 1], [84, 0.65], [146, 0.5], [210, 0.55]]) {
+    const y0 = bootTop(u) + 5;
+    softFill(g, path(`M ${u - 7} ${y0 + 4} Q ${u} ${y0 - 2} ${u + 7} ${y0 + 4} L ${u + 6} 104 Q ${u} 107 ${u - 6} 104 Z`), css(lighten(P.boots.b, 0.5), 0.1 * k), 6);
+    const sp = path(`M ${u - 0.6} ${y0 + 2} Q ${u + 0.6} ${y0 + 18} ${u} ${y0 + 30}`);
+    softStroke(g, sp, 1.5 * k + 0.5, css(lighten(P.boots.b, 0.85), 0.55 * k), 1.6);
+    softStroke(g, path(`M ${u + 0.2} ${y0 + 34} Q ${u + 0.5} ${y0 + 38} ${u + 0.2} ${y0 + 41}`), 1.1 * k + 0.3, css(lighten(P.boots.b, 0.8), 0.4 * k), 1.4);
+    softStroke(g, path(`M ${u - 2} 112 Q ${u + 2} 111 ${u + 6} 112.5`), 1, css(lighten(P.boots.b, 0.7), 0.25 * k), 1.5);
+  }
+  softFill(g, path('M 20 117 Q 32 113 44 117 Q 39 121 32 121 Q 25 121 20 117 Z'), css(lighten(P.boots.b, 0.7), 0.16), 4);
+  // ankle creases at the instep
+  for (const [y, k] of [[98, 0.8], [102.5, 1], [107, 0.8]]) {
+    const p = path(`M 6 ${y + 1} Q 20 ${y - 2} 32 ${y} Q 44 ${y + 2} 58 ${y - 1}`);
+    softStroke(g, p, 1.2, `rgba(0,0,0,${0.6 * k})`, 1.2);
+    g.save(); g.translate(0, -1); softStroke(g, p, 0.8, css(lighten(P.boots.b, 0.55), 0.35 * k), 1); g.restore();
+  }
+  for (const u of [96, 224]) { // side seams with stitching
+    g.strokeStyle = 'rgba(0,0,0,0.6)'; g.lineWidth = 0.9; g.stroke(linePath(u, bootTop(u) + 2, u, 115));
+    g.save(); g.setLineDash([1, 1.2]); g.strokeStyle = css(lighten(P.boots.b, 0.35), 0.45); g.lineWidth = 0.5; g.stroke(linePath(u + 1, bootTop(u) + 3, u + 1, 114)); g.restore();
+  }
+  // heel block (back and back portions of the sides)
+  const heel = path('M 102 116 L 218 116 L 218 124 L 102 124 Z');
+  g.fillStyle = css(mix(P.boots.b, [40, 28, 20], 0.35)); g.fill(heel);
+  g.strokeStyle = css(lighten(P.boots.b, 0.3), 0.6); g.lineWidth = 0.7; g.stroke(linePath(102, 116.3, 218, 116.3));
+  g.strokeStyle = 'rgba(0,0,0,0.7)'; g.stroke(linePath(102.4, 116, 102.4, 124)); g.stroke(linePath(217.6, 116, 217.6, 124));
+  // sole and welt all round
+  g.fillStyle = css(mix(P.boots.b, [36, 26, 18], 0.4)); g.fillRect(-1, 124, 258, 5);
+  g.strokeStyle = css(lighten(P.boots.b, 0.32), 0.7); g.lineWidth = 0.7; g.stroke(linePath(-1, 123.8, 257, 123.8));
+  g.restore();
+  // boot top: inner edge shadow, silver edging, tassel at the V notch
+  softStroke(g, polyPath(tops.map(([u, y]) => [u, y + 1.6])), 1.2, 'rgba(0,0,0,0.7)', 1.2);
+  strokeLace(g, polyPath(tops.map(([u, y]) => [u, y + 0.5])), 1.6, P.trouserLace);
+  const tx = 32, ty = bootTop(32) + 1;
+  for (let f = -3; f <= 3; f++) strokeCord(g, path(`M ${tx + f * 0.35} ${ty + 1.2} Q ${tx + f * 0.7} ${ty + 5} ${tx + f * 0.95} ${ty + 8.6}`), 0.6, P.trouserLace, { twist: false, shadow: f === 3 });
+  g.fillStyle = metalFill(g, tx - 1.8, ty - 1.4, tx + 1.8, ty + 2.2, P.trouserLace);
+  g.beginPath(); g.ellipse(tx, ty + 0.6, 1.8, 1.6, 0, 0, Math.PI * 2); g.fill();
+  // spur: leather strap over the instep, silver neck and rowel at the heel
+  strap(g, [[104, 116.5], [80, 111.5], [64, 109.5], [32, 108.6], [0, 109.5], [-24, 111.5]], 2.2, P.leather, K, 1);
+  strap(g, [[256 - 24, 111.5], [216, 116.5]], 2.2, P.leather, K, 1);
+  const buckle = path('M 86 110.2 L 89.4 110.8 L 89 114.2 L 85.6 113.6 Z');
+  g.strokeStyle = 'rgba(0,0,0,0.6)'; g.lineWidth = 1.2; g.stroke(buckle);
+  g.strokeStyle = css(P.buttons.b); g.lineWidth = 0.7; g.stroke(buckle);
+  strokeCord(g, path('M 104 116.6 Q 132 118.4 160 118.6 Q 188 118.4 216 116.6'), 1.3, P.buttons, { twist: false });
+  strokeCord(g, linePath(160, 118.6, 160, 121.4), 1.1, P.buttons, { twist: false });
+  g.save(); g.translate(160, 122.4);
+  for (let k = 0; k < 6; k++) { g.rotate(Math.PI / 3); strokeCord(g, linePath(0, 0, 0, 2.5), 0.6, P.buttons, { twist: false, shadow: k === 0 }); }
+  g.restore();
+  button(g, 160, 122.4, 0.8, P.buttons);
+  if (withSabretache) paintSabretache(g, K);
+  shadeFaces(g, [[0, 64], [64, 64], [128, 64], [192, 64]], 128, { edge: 0.12, ew: 12, top: 0, bottom: 0 });
+  return c;
+}
+function paintLegUp(K) {
+  const { P } = K;
+  const c = makeCanvas(64, 64), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'wool', P.breeches, K); g.fillRect(0, 0, 64, 64);
+  g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, 0, 64, 64);
+  return c;
+}
+function paintLegDown(K) {
+  const { P } = K;
+  const c = makeCanvas(64, 64), g = c.getContext('2d');
+  const sole = tone(rgbToHex(mix(P.boots.b, [52, 36, 24], 0.5)));
+  g.fillStyle = pat(g, 'leather', sole, K); g.fillRect(0, 0, 64, 64);
+  // toe at the top edge (front), heel at the bottom edge (back)
+  g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 0.8; g.strokeRect(2.5, 2.5, 59, 59);
+  g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(3, 44, 58, 17);
+  g.strokeStyle = 'rgba(0,0,0,0.7)'; g.lineWidth = 1; g.stroke(linePath(3, 44, 61, 44));
+  for (let x = 7; x <= 57; x += 5) { g.fillStyle = css(lighten(P.buttons.b, 0.1), 0.55); g.fillRect(x, 58, 1, 1); }
+  for (let y = 48; y <= 56; y += 4) { g.fillRect(6, y, 1, 1); g.fillRect(57, y, 1, 1); }
+  return c;
+}
+function paintPantsTorso(K) {
+  const { P } = K;
+  const c = makeCanvas(384, 128), g = c.getContext('2d');
+  const FX = 64, BX = 256;
+  // linen shirt above, high-waisted breeches below
+  g.fillStyle = pat(g, 'linen', P.linen, K); g.fillRect(0, 0, 384, 90);
+  for (const x0 of [0, 64, 192, 256]) { // soft linen gathers toward the waistband
+    const w = x0 === 0 || x0 === 192 ? 64 : 128;
+    for (let x = x0 + 8; x < x0 + w - 4; x += 11) {
+      softStroke(g, path(`M ${x} 8 Q ${x + 3} 50 ${x + 1} 88`), 1.6, 'rgba(0,0,0,0.12)', 3);
+      softStroke(g, path(`M ${x - 3} 8 Q ${x} 50 ${x - 2} 88`), 1.2, 'rgba(255,255,255,0.14)', 2.5);
+    }
+  }
+  g.strokeStyle = css(P.linen.dk, 0.5); g.lineWidth = 0.7; g.stroke(linePath(FX + 64, 14, FX + 64, 86));
+  for (const y of [22, 36]) button(g, FX + 64, y, 1.2, tone('#f2efe8'));
+  g.fillStyle = pat(g, 'wool', P.breeches, K); g.fillRect(0, 88, 384, 40);
+  // waistband
+  g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(0, 88, 384, 1.5);
+  g.strokeStyle = css(P.breeches.lt, 0.25); g.lineWidth = 0.7; g.stroke(linePath(0, 89.4, 384, 89.4));
+  g.strokeStyle = css(P.breeches.dd, 0.9); g.lineWidth = 0.8; g.stroke(linePath(0, 95, 384, 95));
+  // braces
+  for (const s of [-1, 1]) {
+    strap(g, [[FX + 64 + s * 28, -3], [FX + 64 + s * 30, 91]], 5.5, P.facing, K, 1);
+    button(g, FX + 64 + s * 30, 91, 1.8, P.buttons);
+  }
+  strap(g, [[BX + 36, -3], [BX + 64, 54], [BX + 64, 91]], 5.5, P.facing, K, 1);
+  strap(g, [[BX + 92, -3], [BX + 64, 54]], 5.5, P.facing, K, -1);
+  const tab = path(`M ${BX + 59} 50 L ${BX + 69} 50 L ${BX + 66} 58 L ${BX + 62} 58 Z`);
+  dropShadow(g, tab, 1.5); g.fillStyle = pat(g, 'leather', P.leather, K); g.fill(tab);
+  button(g, BX + 64, 91, 1.8, P.buttons);
+  // fall-front buttons and the upper half of the Hungarian knots
+  for (const x of [FX + 30, FX + 98]) button(g, x, 98, 1.8, P.buttons);
+  for (const cx of [FX + 32, FX + 96]) {
+    const L = x => cx - 32 + x;
+    strokeCord(g, path(`M ${L(14)} 129 C ${L(14)} 116 ${L(24)} 106 ${L(32)} 103 C ${L(40)} 106 ${L(50)} 116 ${L(50)} 129`), 1.9, P.trouserLace);
+    strokeCord(g, path(`M ${L(22)} 129 C ${L(22)} 120 ${L(28)} 113 ${L(32)} 111 C ${L(36)} 113 ${L(42)} 120 ${L(42)} 129`), 1.7, P.trouserLace);
+  }
+  for (const x of [32, 224]) sideStripe(g, x, 95, 129, K);
+  g.strokeStyle = css(P.breeches.dd, 0.85); g.lineWidth = 0.8; g.stroke(linePath(BX + 64, 95, BX + 64, 128));
+  // open neck of the shirt: transparent so the avatar's skin shows
+  g.save(); g.globalCompositeOperation = 'destination-out'; g.fill(path(`M ${FX + 57} -1 L ${FX + 71} -1 L ${FX + 64} 14 Z`)); g.restore();
+  g.strokeStyle = css(P.linen.dk, 0.6); g.lineWidth = 0.8; g.stroke(path(`M ${FX + 56.4} 0 L ${FX + 64} 15 L ${FX + 71.6} 0`));
+  shadeFaces(g, [[0, 64], [64, 128], [192, 64], [256, 128]], 128, { edge: 0.16 });
+  return c;
+}
+function paintPantsTorsoUp(K) {
+  const { P } = K;
+  const c = makeCanvas(128, 64), g = c.getContext('2d');
+  g.fillStyle = pat(g, 'linen', P.linen, K); g.fillRect(0, 0, 128, 64);
+  g.fillStyle = css(P.linen.dk, 0.55); g.fillRect(40, 6, 48, 52);
+  g.strokeStyle = css(P.linen.dk, 0.6); g.lineWidth = 0.8; g.strokeRect(38.5, 4.5, 51, 55);
+  for (const x of [36, 92]) {
+    const b = path(`M ${x - 2.75} -1 L ${x + 2.75} -1 L ${x + 2.75} 65 L ${x - 2.75} 65 Z`);
+    dropShadow(g, b, 2, 0.5, 0, 0.45);
+    g.fillStyle = pat(g, 'leather', P.facing, K); g.fill(b);
+    g.strokeStyle = css(P.facing.lt, 0.5); g.lineWidth = 0.6; g.stroke(linePath(x - 2.3, -1, x - 2.3, 65));
+  }
+  return c;
+}
+
+/* =====================================================================
+   8. TEMPLATE ASSEMBLY
+   ===================================================================== */
+function placeFace(g, src, sx, sy, w, h, dx, dy) {
+  // one-pixel bleed into the 2 px template gutter prevents filtering seams
+  g.drawImage(src, sx, sy, 1, h, dx - 1, dy, 1, h);
+  g.drawImage(src, sx + w - 1, sy, 1, h, dx + w, dy, 1, h);
+  g.drawImage(src, sx, sy, w, 1, dx, dy - 1, w, 1);
+  g.drawImage(src, sx, sy + h - 1, w, 1, dx, dy + h, w, 1);
+  g.drawImage(src, sx, sy, w, h, dx, dy, w, h);
+}
+function placeStrip(g, strip, slices, uvSet) {
+  for (const [name, sx] of slices) { const [dx, dy, w, h] = uvSet[name]; placeFace(g, strip, sx, 0, w, h, dx, dy); }
+}
+function placeSquare(g, src, rect) { placeFace(g, src, 0, 0, rect[2], rect[3], rect[0], rect[1]); }
+function makeKit(cfg) {
+  const P = {};
+  for (const [k, v] of Object.entries(cfg.colors)) P[k] = tone(v);
+  const seed = (cfg.options.seed | 0) || 1;
+  return { P, O: cfg.options, seed, rng: mulberry32(seed ^ 0x5bd1e995) };
+}
+function buildShirt(cfg) {
+  const K = makeKit(cfg);
+  const out = makeCanvas(TEX_W, TEX_H), g = out.getContext('2d');
+  placeStrip(g, paintShirtTorso(K), TORSO_SLICES, UV.torso);
+  placeSquare(g, paintShirtTorsoUp(K), UV.torso.up);
+  placeSquare(g, paintShirtTorsoDown(K), UV.torso.down);
+  placeStrip(g, paintArmStrip(K, !!K.O.pelisse), LEFT_LIMB_SLICES, UV.leftLimb);
+  placeSquare(g, paintArmUp(K, !!K.O.pelisse), UV.leftLimb.up);
+  placeSquare(g, paintArmDown(K), UV.leftLimb.down);
+  placeStrip(g, flipped(paintArmStrip(K, false)), RIGHT_LIMB_SLICES, UV.rightLimb);
+  placeSquare(g, flipped(paintArmUp(K, false)), UV.rightLimb.up);
+  placeSquare(g, flipped(paintArmDown(K)), UV.rightLimb.down);
+  return out;
+}
+function buildPants(cfg) {
+  const K = makeKit(cfg);
+  const out = makeCanvas(TEX_W, TEX_H), g = out.getContext('2d');
+  placeStrip(g, paintPantsTorso(K), TORSO_SLICES, UV.torso);
+  placeSquare(g, paintPantsTorsoUp(K), UV.torso.up);
+  placeSquare(g, paintShirtTorsoDown(K), UV.torso.down);
+  placeStrip(g, paintLegStrip(K, !!K.O.sabretache), LEFT_LIMB_SLICES, UV.leftLimb);
+  placeSquare(g, paintLegUp(K), UV.leftLimb.up);
+  placeSquare(g, paintLegDown(K), UV.leftLimb.down);
+  placeStrip(g, flipped(paintLegStrip(K, false)), RIGHT_LIMB_SLICES, UV.rightLimb);
+  placeSquare(g, flipped(paintLegUp(K)), UV.rightLimb.up);
+  placeSquare(g, flipped(paintLegDown(K)), UV.rightLimb.down);
+  return out;
+}
+
+/* =====================================================================
+   9. APP — controls, previews, fitting room, downloads
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const shirtCanvas = $('#shirtCanvas'), pantsCanvas = $('#pantsCanvas');
+const state = { shirt: null, pants: null, urls: { shirt: null, pants: null }, version: 0 };
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, 2600);
+}
+function render() {
+  const t0 = performance.now();
+  state.shirt = buildShirt(CONFIG);
+  state.pants = buildPants(CONFIG);
+  for (const [cv, src] of [[shirtCanvas, state.shirt], [pantsCanvas, state.pants]]) {
+    const g = cv.getContext('2d'); g.clearRect(0, 0, TEX_W, TEX_H); g.drawImage(src, 0, 0);
+  }
+  const ms = Math.round(performance.now() - t0);
+  $('#status').textContent = `Rendered in ${ms} ms · two textures at ${TEX_W} × ${TEX_H} px · seed ${CONFIG.options.seed}`;
+  updateFittingTextures(++state.version);
+}
+let pending = 0;
+function scheduleRender() { if (pending) return; pending = requestAnimationFrame(() => { pending = 0; render(); }); }
+
+// ---- controls
+function buildControls() {
+  const sel = $('#preset');
+  for (const [id, p] of Object.entries(PRESETS)) { const o = document.createElement('option'); o.value = id; o.textContent = p.name; sel.appendChild(o); }
+  sel.addEventListener('change', () => applyPreset(sel.value));
+  document.querySelectorAll('.swatches').forEach(box => {
+    for (const key of box.dataset.keys.split(' ')) {
+      const lab = document.createElement('label'); lab.className = 'swatch'; lab.htmlFor = 'c-' + key;
+      lab.innerHTML = `<input type="color" id="c-${key}"><span class="lbl"><b>${COLOR_LABELS[key]}</b><code id="c-${key}-hex"></code></span>`;
+      box.appendChild(lab);
+      $('input', lab).addEventListener('input', e => { CONFIG.colors[key] = e.target.value; $(`#c-${key}-hex`).textContent = e.target.value; scheduleRender(); });
+    }
+  });
+  const bind = (id, key, read) => $(id).addEventListener('change', e => { CONFIG.options[key] = read(e.target); syncControls(); scheduleRender(); });
+  bind('#opt-pelisse', 'pelisse', el => el.checked);
+  bind('#opt-crossbelt', 'crossbelt', el => el.checked);
+  bind('#opt-sash', 'sash', el => el.checked);
+  bind('#opt-sabretache', 'sabretache', el => el.checked);
+  bind('#opt-cuff', 'cuffPoint', el => el.value);
+  bind('#opt-hands', 'hands', el => el.value);
+  bind('#opt-seed', 'seed', el => clamp(parseInt(el.value, 10) || 1, 1, 999999));
+  $('#opt-rows').addEventListener('input', e => { CONFIG.options.frogRows = +e.target.value; $('#opt-rows-out').textContent = e.target.value; scheduleRender(); });
+  $('#resetCfg').addEventListener('click', () => { Object.assign(CONFIG.options, DEFAULT_OPTIONS); applyPreset(CONFIG.preset); toast('Preset restored'); });
+  $('#copyCfg').addEventListener('click', async () => {
+    const text = JSON.stringify({ colors: CONFIG.colors, options: CONFIG.options }, null, 2);
+    try { await navigator.clipboard.writeText(text); toast('Settings copied as JSON'); }
+    catch { console.log(text); toast('Clipboard unavailable here; settings printed to the console'); }
+  });
+  $('#showGuide').addEventListener('change', e => { for (const id of ['#shirtGuide', '#pantsGuide']) $(id).hidden = !e.target.checked; });
+  drawGuide($('#shirtGuide'), 'Shirt'); drawGuide($('#pantsGuide'), 'Pants');
+  syncControls();
+}
+function applyPreset(id) {
+  CONFIG.preset = id;
+  CONFIG.colors = { ...PRESETS[id].colors };
+  syncControls(); scheduleRender();
+}
+function syncControls() {
+  $('#preset').value = CONFIG.preset;
+  for (const [k, v] of Object.entries(CONFIG.colors)) { const el = $('#c-' + k); if (el) { el.value = v; $(`#c-${k}-hex`).textContent = v; } }
+  const O = CONFIG.options;
+  $('#opt-pelisse').checked = O.pelisse; $('#opt-crossbelt').checked = O.crossbelt; $('#opt-sash').checked = O.sash;
+  $('#opt-sabretache').checked = O.sabretache; $('#opt-cuff').value = O.cuffPoint; $('#opt-hands').value = O.hands;
+  $('#opt-rows').value = O.frogRows; $('#opt-rows-out').textContent = O.frogRows; $('#opt-seed').value = O.seed;
+}
+function drawGuide(cv, kind) {
+  const g = cv.getContext('2d');
+  const names = kind === 'Shirt' ? { rightLimb: 'R arm', leftLimb: 'L arm' } : { rightLimb: 'R leg', leftLimb: 'L leg' };
+  g.font = '600 10px ui-monospace, Menlo, monospace'; g.textBaseline = 'top';
+  for (const [part, faces] of Object.entries(UV)) {
+    for (const [face, [x, y, w, h]] of Object.entries(faces)) {
+      g.strokeStyle = 'rgba(255,214,0,0.95)'; g.lineWidth = 1; g.setLineDash([4, 3]); g.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1); g.setLineDash([]);
+      const label = `${part === 'torso' ? 'Torso' : names[part]} ${face}`;
+      g.fillStyle = 'rgba(0,0,0,0.65)'; g.fillRect(x + 2, y + 2, g.measureText(label).width + 6, 13);
+      g.fillStyle = '#ffd600'; g.fillText(label, x + 5, y + 4);
+    }
+  }
+}
+function buildUvTable() {
+  const tb = $('#uvTable tbody');
+  const neighbour = {
+    torso: { right: 'Back (wraps)', front: 'Right side', left: 'Front', back: 'Left side', up: '—', down: '—' },
+    rightLimb: { left: 'Front (wraps)', back: 'Left (inner)', right: 'Back', front: 'Right (outer)', up: '—', down: '—' },
+    leftLimb: { front: 'Right (inner, wraps)', left: 'Front', back: 'Left (outer)', right: 'Back', up: '—', down: '—' },
+  };
+  const partName = { torso: 'Torso', rightLimb: 'Right arm / leg', leftLimb: 'Left arm / leg' };
+  for (const [part, faces] of Object.entries(UV)) {
+    for (const [face, [x, y, w, h]] of Object.entries(faces)) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${partName[part]}</td><td>${face}</td><td class="num">${x}</td><td class="num">${y}</td><td class="num">${w} × ${h}</td><td>${neighbour[part][face]}</td>`;
+      tb.appendChild(tr);
+    }
+  }
+}
+
+// ---- downloads (works locally via <a download>, and inside claude.ai via the downloads capability)
+let downloadsCap = null;
+if (window.claude && typeof window.claude.use === 'function') {
+  window.claude.use('downloads').then(d => { downloadsCap = d; }).catch(() => {});
+}
+async function savePng(which) {
+  const canvas = which === 'shirt' ? state.shirt : state.pants;
+  const filename = which === 'shirt' ? 'Brelois_Hussar_Shirt.png' : 'Brelois_Hussar_Pants.png';
+  const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+  if (!blob) { toast('Could not encode the PNG in this browser'); return; }
+  if (downloadsCap) {
+    try { const r = await downloadsCap.save({ filename, data: blob }); if (r && r.status === 'saved') toast(`Saved ${filename}`); }
+    catch (e) { if (e && e.code === 'declined') toast('Download cancelled'); else toast('Downloads are unavailable in this view'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast(`Saved ${filename} (${canvas.width} × ${canvas.height})`);
+}
+
+// ---- fitting room: an R6 rig built from CSS 3D boxes
+const fit = { yaw: -28, pitch: -9, S: 64, spin: false, dragging: false, last: 0 };
+function skinTone() { return '#e3b48b'; }
+function headTextures() {
+  const skin = skinTone();
+  const front = makeCanvas(80, 80), g = front.getContext('2d');
+  g.fillStyle = skin; g.fillRect(0, 0, 80, 80);
+  g.fillStyle = '#1b1b1f';
+  g.beginPath(); g.ellipse(29, 36, 3.4, 5, 0, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.ellipse(51, 36, 3.4, 5, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#1b1b1f'; g.lineWidth = 2.6; g.lineCap = 'round';
+  g.beginPath(); g.arc(40, 46, 12, 0.18 * Math.PI, 0.82 * Math.PI); g.stroke();
+  return { front: front.toDataURL() };
+}
+function shakoTextures() {
+  const P = makeKit(CONFIG).P;
+  const side = makeCanvas(64, 60), g = side.getContext('2d');
+  g.fillStyle = '#121216'; g.fillRect(0, 0, 64, 60);
+  g.fillStyle = linGrad(g, 0, 0, 0, 60, [[0, 'rgba(255,255,255,0.08)'], [1, 'rgba(0,0,0,0.2)']]); g.fillRect(0, 0, 64, 60);
+  g.fillStyle = css(P.lace.b); g.fillRect(0, 2, 64, 4);
+  g.fillStyle = css(P.lace.dk); g.fillRect(0, 5, 64, 1);
+  const front = makeCanvas(64, 60), f = front.getContext('2d');
+  f.drawImage(side, 0, 0);
+  strokeCord(f, path('M 4 18 Q 32 40 60 18 M 4 26 Q 32 48 60 26'), 1.8, P.lace);
+  f.fillStyle = css(P.facing.b); f.beginPath(); f.arc(32, 13, 5, 0, Math.PI * 2); f.fill();
+  f.fillStyle = css(P.lace.hi); f.beginPath(); f.arc(32, 13, 2.2, 0, Math.PI * 2); f.fill();
+  crown(f, 32, 34, 5, P.buttons);
+  const top = makeCanvas(64, 64), t = top.getContext('2d');
+  t.fillStyle = '#18181d'; t.fillRect(0, 0, 64, 64);
+  t.strokeStyle = css(P.lace.b); t.lineWidth = 3; t.strokeRect(1.5, 1.5, 61, 61);
+  return { side: side.toDataURL(), front: front.toDataURL(), top: top.toDataURL() };
+}
+const FACE_LIGHT = { front: 0, up: -0.08, left: 0.2, right: 0.14, back: 0.3, down: 0.5 };
+function addBox(rig, size, pos, paint, cls) {
+  const S = fit.S, [sw, sh, sd] = size, W = sw * S, H = sh * S, D = sd * S;
+  const box = document.createElement('div'); box.className = 'box ' + (cls || '');
+  box.style.transform = `translate3d(${pos[0] * S}px, ${-pos[1] * S}px, ${pos[2] * S}px)`;
+  const defs = {
+    front: [W, H, `translateZ(${D / 2}px)`],
+    back: [W, H, `rotateY(180deg) translateZ(${D / 2}px)`],
+    left: [D, H, `rotateY(90deg) translateZ(${W / 2}px)`],
+    right: [D, H, `rotateY(-90deg) translateZ(${W / 2}px)`],
+    up: [W, D, `rotateX(90deg) translateZ(${H / 2}px)`],
+    down: [W, D, `rotateX(-90deg) translateZ(${H / 2}px)`],
+  };
+  for (const [name, [fw, fh, tf]] of Object.entries(defs)) {
+    const f = document.createElement('div'); f.className = 'face';
+    Object.assign(f.style, { width: fw + 'px', height: fh + 'px', left: -fw / 2 + 'px', top: -fh / 2 + 'px', transform: tf });
+    const l = FACE_LIGHT[name];
+    f.style.boxShadow = l >= 0 ? `inset 0 0 0 999px rgba(0,0,0,${l})` : `inset 0 0 0 999px rgba(255,255,255,${-l})`;
+    paint(name, f, fw, fh);
+    box.appendChild(f);
+  }
+  rig.appendChild(box);
+}
+function texPainter(uvSet, layers) {
+  return (name, f, fw) => {
+    const [x, y, w] = uvSet[name], k = fw / w;
+    f.style.backgroundColor = skinTone();
+    f.style.backgroundImage = layers.map(l => `var(--tex-${l})`).join(', ');
+    f.style.backgroundSize = layers.map(() => `${TEX_W * k}px ${TEX_H * k}px`).join(', ');
+    f.style.backgroundPosition = layers.map(() => `${-x * k}px ${-y * k}px`).join(', ');
+  };
+}
+function buildFitting() {
+  const stage = $('#stage'), rig = $('#rig');
+  fit.S = Math.round(clamp(stage.clientHeight / 7.6, 36, 74));
+  rig.innerHTML = '';
+  const head = headTextures(), shako = shakoTextures();
+  addBox(rig, [2, 2, 1], [0, 0.5, 0], texPainter(UV.torso, ['shirt', 'pants']));
+  addBox(rig, [1, 2, 1], [-1.5, 0.5, 0], texPainter(UV.rightLimb, ['shirt']));
+  addBox(rig, [1, 2, 1], [1.5, 0.5, 0], texPainter(UV.leftLimb, ['shirt']));
+  addBox(rig, [1, 2, 1], [-0.5, -1.5, 0], texPainter(UV.rightLimb, ['pants']));
+  addBox(rig, [1, 2, 1], [0.5, -1.5, 0], texPainter(UV.leftLimb, ['pants']));
+  addBox(rig, [1.2, 1.2, 1.2], [0, 2.1, 0], (name, f) => {
+    f.style.backgroundColor = skinTone();
+    if (name === 'front') { f.style.backgroundImage = `url(${head.front})`; f.style.backgroundSize = '100% 100%'; }
+  });
+  addBox(rig, [1.02, 0.95, 1.02], [0, 3.1, 0], (name, f) => {
+    f.style.backgroundImage = `url(${name === 'front' ? shako.front : name === 'up' ? shako.top : shako.side})`;
+    f.style.backgroundSize = '100% 100%'; f.style.backgroundColor = '#121216';
+  }, 'shako');
+  $('.shako', rig).hidden = !$('#fitShako').checked;
+  applyRig();
+  updateFittingTextures(state.version);
+}
+function applyRig() { $('#rig').style.transform = `translateY(${fit.S * 0.1}px) rotateX(${fit.pitch}deg) rotateY(${fit.yaw}deg)`; }
+function updateFittingTextures(version) {
+  const rig = $('#rig');
+  const showShirt = $('#fitShirt').checked, showPants = $('#fitPants').checked;
+  for (const which of ['shirt', 'pants']) {
+    const cv = state[which]; if (!cv) continue;
+    cv.toBlob(blob => {
+      if (!blob || version !== state.version) return;
+      if (state.urls[which]) URL.revokeObjectURL(state.urls[which]);
+      state.urls[which] = URL.createObjectURL(blob);
+      const on = which === 'shirt' ? showShirt : showPants;
+      rig.style.setProperty(`--tex-${which}`, on ? `url(${state.urls[which]})` : 'none');
+    }, 'image/png');
+  }
+}
+function setupFittingInput() {
+  const stage = $('#stage');
+  stage.addEventListener('pointerdown', e => { fit.dragging = true; fit.last = e.clientX; stage.setPointerCapture(e.pointerId); setSpin(false); });
+  stage.addEventListener('pointermove', e => { if (!fit.dragging) return; fit.yaw += (e.clientX - fit.last) * 0.6; fit.last = e.clientX; applyRig(); });
+  const end = () => { fit.dragging = false; };
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+  document.querySelectorAll('.views [data-yaw]').forEach(b => b.addEventListener('click', () => { setSpin(false); fit.yaw = +b.dataset.yaw; applyRig(); }));
+  $('#fitSpin').addEventListener('change', e => setSpin(e.target.checked));
+  for (const id of ['#fitShirt', '#fitPants']) $(id).addEventListener('change', () => updateFittingTextures(state.version));
+  $('#fitShako').addEventListener('change', e => { const s = $('#rig .shako'); if (s) s.hidden = !e.target.checked; });
+  let rt = 0;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(buildFitting, 150); });
+  let lastT = 0;
+  const tick = t => { if (fit.spin && !fit.dragging) { fit.yaw += (t - (lastT || t)) * 0.02; applyRig(); } lastT = t; requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function setSpin(on) { fit.spin = on; $('#fitSpin').checked = on; }
+
+// ---- boot
+buildControls();
+buildUvTable();
+$('#dlShirt').addEventListener('click', () => savePng('shirt'));
+$('#dlPants').addEventListener('click', () => savePng('pants'));
+render();
+buildFitting();
+setupFittingInput();
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (!reduceMotion) setSpin(false);
+
+// Programmatic access (used by tools/export-pngs.mjs and handy from the console)
+window.BreloisUniform = {
+  CONFIG, PRESETS, UV, render,
+  buildShirt: (cfg = CONFIG) => buildShirt(cfg),
+  buildPants: (cfg = CONFIG) => buildPants(cfg),
+  pngDataURL: which => (which === 'shirt' ? state.shirt : state.pants).toDataURL('image/png'),
+  setView: (yaw, pitch = fit.pitch) => { setSpin(false); fit.yaw = yaw; fit.pitch = pitch; applyRig(); },
+  setYaw: deg => { setSpin(false); fit.yaw = deg; applyRig(); },
+};
+})();
+</script>
+</body>
+</html>
